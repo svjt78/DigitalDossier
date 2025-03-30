@@ -1,0 +1,92 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Blog {
+  id        Int      @id @default(autoincrement())
+  title     String
+  slug      String   @unique
+  author    String
+  genre     String?
+  summary   String?
+  content   String
+  cover     String?  // Image URL
+  pdfUrl    String?  // PDF URL
+  tags      BlogTag[]
+  createdAt DateTime @default(now())
+}
+
+model Book {
+  id        Int      @id @default(autoincrement())
+  title     String
+  slug      String   @unique
+  author    String
+  genre     String?
+  summary   String
+  content   String
+  cover     String?
+  pdfUrl    String?  // PDF URL
+  tags      BookTag[]
+  createdAt DateTime @default(now())
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  title     String
+  slug      String   @unique
+  author    String
+  genre     String?
+  summary   String
+  content   String
+  cover     String?
+  pdfUrl    String?  // PDF URL
+  tags        ProductTag[]
+  createdAt   DateTime @default(now())
+}
+
+// (Join models remain unchanged)
+
+model Tag {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  blogs BlogTag[]
+  books BookTag[]
+  products ProductTag[]
+}
+
+// Many-to-many join tables
+model BlogTag {
+  blogId Int
+  tagId  Int
+
+  blog Blog @relation(fields: [blogId], references: [id])
+  tag  Tag  @relation(fields: [tagId], references: [id])
+
+  @@id([blogId, tagId])
+}
+
+model BookTag {
+  bookId Int
+  tagId  Int
+
+  book Book @relation(fields: [bookId], references: [id])
+  tag  Tag  @relation(fields: [tagId], references: [id])
+
+  @@id([bookId, tagId])
+}
+
+model ProductTag {
+  productId Int
+  tagId     Int
+
+  product Product @relation(fields: [productId], references: [id])
+  tag     Tag     @relation(fields: [tagId], references: [id])
+
+  @@id([productId, tagId])
+}
