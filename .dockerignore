@@ -1,0 +1,18 @@
+# dependencies and build
+node_modules/
+.next/
+
+# Docker config (we mount these directly, so no need in context)
+docker-compose*.yml
+Dockerfile*
+
+# local envs and secrets
+.env*
+!.env.example
+
+# local database files
+postgres_data/
+
+# misc
+*.log
+coverage/

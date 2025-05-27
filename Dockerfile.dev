@@ -1,0 +1,24 @@
+# ========== DEVELOPMENT IMAGE ==========
+FROM node:18-alpine
+
+# 1. Set working directory
+WORKDIR /app
+
+# 2. Copy package manifests & install ALL deps (including dev)
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# 3. Copy Prisma schema, generate client
+COPY prisma ./prisma
+RUN npx prisma generate
+
+# 4. Copy the rest of the source
+COPY . .
+
+# 5. Expose port defined in .env (default 3003)
+ARG PORT=3003
+ENV PORT=${PORT}
+
+# 6. Start Next.js in dev mode (hot-reload)
+#    Use the "dev" script from package.json, which already includes "-p 3003"
+CMD ["npm", "run", "dev"]

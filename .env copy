@@ -1,0 +1,25 @@
+#DATABASE_URL="postgresql://postgres:admin123@localhost:5432/blogdb"
+# === DATABASE CONFIG ===
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=admin123
+POSTGRES_DB=blogdb
+#DATABASE_URL=postgresql://postgres:admin123@localhost:5432/blogdb
+# ***CRITICAL: point at the "db" service, not localhost***
+DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+
+PORT=3003
+
+SITE_URL=https://digitaldossier.com
+
+# === MINIO CONFIG ===
+MINIO_ENDPOINT_PUBLIC=http://localhost:9000
+MINIO_ENDPOINT_INTERNAL=http://minio:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_ROOT_USER=minioadmin
+MINIO_ROOT_PASSWORD=minioadmin
+MINIO_BUCKET=avatars
+MINIO_BUCKET_PNG=content-images
+MINIO_BUCKET_PDF=content-pdfs
+
+NEXT_PUBLIC_BASE_URL=http://localhost:3003

@@ -1,4 +1,3 @@
-// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,84 +8,101 @@ datasource db {
 }
 
 model Blog {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   title     String
-  slug      String   @unique
+  slug      String    @unique
   author    String
   genre     String?
   summary   String?
   content   String
-  cover     String?  // Image URL
-  pdfUrl    String?  // PDF URL
+  coverKey  String?   @map("cover_key")
+  pdfKey    String?   @map("pdf_key")
   tags      BlogTag[]
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt           @map("updated_at")
+
+  @@map("blog")
 }
 
 model Book {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   title     String
-  slug      String   @unique
+  slug      String    @unique
   author    String
   genre     String?
   summary   String
   content   String
-  cover     String?
-  pdfUrl    String?  // PDF URL
+  coverKey  String?   @map("cover_key")
+  pdfKey    String?   @map("pdf_key")
   tags      BookTag[]
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt           @map("updated_at")
+
+  @@map("book")
 }
 
 model Product {
-  id          Int      @id @default(autoincrement())
+  id        Int          @id @default(autoincrement())
   title     String
-  slug      String   @unique
+  slug      String       @unique
   author    String
   genre     String?
   summary   String
   content   String
-  cover     String?
-  pdfUrl    String?  // PDF URL
-  tags        ProductTag[]
-  createdAt   DateTime @default(now())
-}
+  coverKey  String?      @map("cover_key")
+  pdfKey    String?      @map("pdf_key")
+  tags      ProductTag[]
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt           @map("updated_at")
 
-// (Join models remain unchanged)
+  @@map("product")
+}
 
 model Tag {
-  id    Int    @id @default(autoincrement())
-  name  String @unique
-  blogs BlogTag[]
-  books BookTag[]
-  products ProductTag[]
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  blogs     BlogTag[]
+  books     BookTag[]
+  products  ProductTag[]
+
+  @@map("tag")
 }
 
-// Many-to-many join tables
 model BlogTag {
-  blogId Int
-  tagId  Int
-
-  blog Blog @relation(fields: [blogId], references: [id])
-  tag  Tag  @relation(fields: [tagId], references: [id])
+  blogId  Int
+  tagId   Int
+  blog    Blog @relation(fields: [blogId], references: [id])
+  tag     Tag  @relation(fields: [tagId], references: [id])
 
   @@id([blogId, tagId])
+  @@map("blog_tag")
 }
 
 model BookTag {
-  bookId Int
-  tagId  Int
-
-  book Book @relation(fields: [bookId], references: [id])
-  tag  Tag  @relation(fields: [tagId], references: [id])
+  bookId  Int
+  tagId   Int
+  book    Book @relation(fields: [bookId], references: [id])
+  tag     Tag  @relation(fields: [tagId], references: [id])
 
   @@id([bookId, tagId])
+  @@map("book_tag")
 }
 
 model ProductTag {
-  productId Int
-  tagId     Int
-
-  product Product @relation(fields: [productId], references: [id])
-  tag     Tag     @relation(fields: [tagId], references: [id])
+  productId  Int
+  tagId      Int
+  product    Product @relation(fields: [productId], references: [id])
+  tag        Tag     @relation(fields: [tagId], references: [id])
 
   @@id([productId, tagId])
+  @@map("product_tag")
+}
+
+model Profile {
+  id         Int      @id @default(autoincrement())
+  avatarKey  String?  @map("avatar_key")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt           @map("updated_at")
+
+  @@map("profile")
 }
