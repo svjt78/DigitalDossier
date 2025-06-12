@@ -293,7 +293,11 @@ export default function Dashboard({ blogs = [], books = [], products = [] }) {
             setEditingCategory(null);
           }}
           onSave={handleUploadSave}
-          initialData={editingItem}
+          initialData={
+            editingItem
+              ? { ...editingItem, category: editingCategory }
+              : {}
+          }
         />
       )}
     </>

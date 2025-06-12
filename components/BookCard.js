@@ -2,17 +2,33 @@ import Image from 'next/image';
 
 export default function BookCard({ coverUrl, title }) {
   return (
-    <div className="relative w-full sm:w-48 md:w-56 lg:w-64 aspect-[2/3] rounded-xl overflow-hidden shadow-lg transition-transform hover:scale-105 hover:shadow-2xl">
+    <div
+      className="
+        relative
+        rounded-lg
+        overflow-hidden
+        shadow-md
+        transition-transform
+        hover:scale-105
+        hover:shadow-lg
+        w-full
+        sm:w-32
+        md:w-40
+        lg:w-48
+        aspect-[3/4]
+      "
+    >
       {coverUrl ? (
         <Image
           src={coverUrl}
           alt={title ? `${title} cover` : 'Book cover'}
           fill
           className="object-cover"
+          sizes="(max-width: 640px) 100vw, 20vw"
         />
       ) : (
         <div className="flex items-center justify-center bg-gray-300 w-full h-full">
-          <span className="text-gray-700">No Cover Image</span>
+          <span className="text-gray-700 text-sm">No Cover Image</span>
         </div>
       )}
     </div>

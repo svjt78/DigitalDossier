@@ -55,15 +55,11 @@ export async function getStaticProps() {
 }
 
 export default function HomePage({ items }) {
-  // which tab/filter is active ('all', 'blog', 'book', 'product', etc.)
   const activeFilter = useFilter();
-
-  // search text from shared Header search box
-  const searchQuery = useSearchQuery();
+  const searchQuery  = useSearchQuery().trim().toLowerCase();
 
   // apply category + search filters
   const filteredItems = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
     return items
       .filter(item =>
         activeFilter === 'all'
@@ -71,7 +67,7 @@ export default function HomePage({ items }) {
           : item.type.toLowerCase() === activeFilter
       )
       .filter(item => {
-        if (!q) return true;
+        if (!searchQuery) return true;
         return [
           item.type,
           item.title,
@@ -79,7 +75,7 @@ export default function HomePage({ items }) {
           item.genre,
           item.content,
         ].some(field =>
-          field?.toString().toLowerCase().includes(q)
+          field?.toString().toLowerCase().includes(searchQuery)
         );
       });
   }, [items, activeFilter, searchQuery]);
@@ -132,7 +128,7 @@ export default function HomePage({ items }) {
           <h1 className="text-4xl font-bold mb-6 text-white">Content Hub</h1>
 
           {/* Card grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
             {filteredItems.map(item => {
               const pathMap = { Blog: 'blog', Book: 'books', Product: 'products' };
               const detailUrl = `/${pathMap[item.type]}/${item.slug}`;
@@ -140,22 +136,42 @@ export default function HomePage({ items }) {
               return (
                 <Link key={`${item.type}-${item.id}`} href={detailUrl} legacyBehavior>
                   <a className="block relative">
-                    <div className="rounded-xl overflow-hidden shadow-lg transition-transform hover:scale-105 hover:shadow-2xl w-full sm:w-48 md:w-56 lg:w-64 aspect-[2/3] bg-gray-100">
+                    <div
+                      className="
+                        relative
+                        rounded-lg
+                        overflow-hidden
+                        shadow-md
+                        transition-transform
+                        hover:scale-105
+                        hover:shadow-lg
+                        w-full
+                        sm:w-32
+                        md:w-40
+                        lg:w-48
+                        aspect-[3/4]
+                        bg-gray-100
+                      "
+                    >
                       {item.coverUrl ? (
                         <Image
                           src={item.coverUrl}
                           alt={item.title}
                           fill
                           className="object-cover"
+                          sizes="(max-width: 640px) 100vw, 20vw"
                         />
                       ) : (
                         <div className="w-full h-full bg-gray-300 flex items-center justify-center">
-                          <span className="text-gray-700">No Image</span>
+                          <span className="text-gray-700 text-sm">No Image</span>
                         </div>
                       )}
                     </div>
                     <span
-                      className={`absolute top-2 left-2 text-white text-xs font-bold px-2 py-1 rounded ${badgeClasses[item.type]}`}
+                      className={`
+                        absolute top-2 left-2 text-white text-xs font-bold px-2 py-1 rounded
+                        ${badgeClasses[item.type]}
+                      `}
                     >
                       {item.type}
                     </span>

@@ -1,4 +1,5 @@
 // pages/products/index.js
+
 import Head from 'next/head'
 import Link from 'next/link'
 import { useMemo } from 'react'
@@ -41,16 +42,14 @@ export async function getStaticProps() {
 
 export default function ProductsPage({ products }) {
   // read search text from the shared header search box
-  const searchQuery = useSearchQuery()
+  const searchQuery = useSearchQuery().trim().toLowerCase()
 
   // client-side filter by searchQuery (case-insensitive, partial match)
   const filteredProducts = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase()
-    if (!q) return products
-
+    if (!searchQuery) return products
     return products.filter(prod =>
       [prod.title, prod.description]
-        .some(field => field.toLowerCase().includes(q))
+        .some(field => field.toLowerCase().includes(searchQuery))
     )
   }, [products, searchQuery])
 
@@ -95,9 +94,10 @@ export default function ProductsPage({ products }) {
         />
       </Head>
 
-      <div className="px-4 sm:px-8 py-6 lg:py-8">
+      {/* Constrain width and match Books/Blog pages */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6 lg:py-8">
         <h1 className="text-3xl font-bold mb-6">Products</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
           {filteredProducts.map(product => (
             <Link
               key={product.id}

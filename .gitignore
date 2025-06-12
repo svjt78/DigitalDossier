@@ -46,6 +46,7 @@ docker-compose.override.yml
 # Optional: uploaded/generated files
 public/uploads/
 uploads/
+postgres_data/
 
 # Misc
 *.swp

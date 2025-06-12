@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { prisma } from '@/lib/prisma';
+import formidable from 'formidable';
 
 // Disable Next.js default body parsing to handle multipart forms
 export const config = { api: { bodyParser: false } };
@@ -20,12 +21,13 @@ const BUCKET = process.env.AWS_S3_BUCKET;
 const IMAGES_PREFIX = process.env.S3_CONTENT_IMAGES_PREFIX || 'content-images';
 const PDF_PREFIX = process.env.S3_CONTENT_PDFS_PREFIX || 'content-pdfs';
 
+// Helper to flatten Formidable’s array values
+const getValue = v => Array.isArray(v) ? v[0] : v;
+
 // Parse multipart form data using formidable
 function parseForm(req) {
-  const formidable = require('formidable');
   return new Promise((resolve, reject) => {
-    const form = new formidable.IncomingForm();
-    form.keepExtensions = true;
+    const form = formidable({ keepExtensions: true });
     form.parse(req, (err, fields, files) => {
       if (err) return reject(err);
       resolve({ fields, files });
@@ -97,11 +99,12 @@ export default async function handler(req, res) {
     }
 
     const updateData = {};
-    // Update text fields
-    if (fields.title) updateData.title = fields.title;
-    if (fields.author) updateData.author = fields.author;
-    if (fields.genre) updateData.genre = fields.genre;
-    if (fields.content !== undefined) updateData.content = fields.content;
+    // Flatten and update text fields
+    for (const key of ['title', 'author', 'genre', 'content']) {
+      if (fields[key] !== undefined) {
+        updateData[key] = getValue(fields[key]);
+      }
+    }
 
     // Handle new cover image
     if (files.coverImage) {
@@ -160,7 +163,6 @@ export default async function handler(req, res) {
     }
 
     return res.status(200).json({ success: true });
-
   } else {
     res.setHeader('Allow', ['PUT', 'DELETE']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);

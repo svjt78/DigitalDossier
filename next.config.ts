@@ -11,7 +11,9 @@ const pdfPrefix     = process.env.S3_CONTENT_PDFS_PREFIX!;
 
 const nextConfig: NextConfig = {
   images: {
-    // Allow loading from your S3 bucket under all three prefixes
+    // Allow loading from your S3 bucket host
+    domains: [s3Host],
+    // Allow loading specific prefixes via remotePatterns
     remotePatterns: [
       {
         protocol: "https",

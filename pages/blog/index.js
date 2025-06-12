@@ -23,17 +23,15 @@ export async function getStaticProps() {
   const blogs = rawBlogs.map(blog => ({
     ...blog,
     coverUrl: blog.coverKey
-      ? `${s3BaseUrl}/${encodeURI(blog.coverKey)}`
+      ? `${s3BaseUrl}/${encodeURIComponent(blog.coverKey)}`
       : null,
     pdfUrl: blog.pdfKey
-      ? `${s3BaseUrl}/${encodeURI(blog.pdfKey)}`
+      ? `${s3BaseUrl}/${encodeURIComponent(blog.pdfKey)}`
       : null,
   }));
 
   return {
-    props: {
-      blogs: JSON.parse(JSON.stringify(blogs)),
-    },
+    props: { blogs: JSON.parse(JSON.stringify(blogs)) },
     revalidate: 60,
   };
 }
@@ -41,19 +39,11 @@ export async function getStaticProps() {
 export default function BlogPage({ blogs }) {
   const searchQuery = useSearchQuery().trim().toLowerCase();
 
-  // Filter blogs by search query across title, author, genre, summary, content
   const filteredBlogs = useMemo(() => {
     if (!searchQuery) return blogs;
     return blogs.filter(blog =>
-      [
-        blog.title,
-        blog.author,
-        blog.genre,
-        blog.summary,
-        blog.content,
-      ].some(field =>
-        field?.toString().toLowerCase().includes(searchQuery)
-      )
+      [blog.title, blog.author, blog.genre, blog.summary, blog.content]
+        .some(field => field?.toString().toLowerCase().includes(searchQuery))
     );
   }, [blogs, searchQuery]);
 
@@ -61,9 +51,9 @@ export default function BlogPage({ blogs }) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    itemListElement: filteredBlogs.map((blog, index) => ({
+    itemListElement: filteredBlogs.map((blog, idx) => ({
       "@type": "ListItem",
-      position: index + 1,
+      position: idx + 1,
       url: `${canonicalUrl}/${blog.slug}`,
     })),
   };
@@ -71,15 +61,12 @@ export default function BlogPage({ blogs }) {
   return (
     <>
       <Head>
-        {/* Page Meta */}
         <title>Blog Posts | Digital Dossier</title>
         <meta
           name="description"
           content="Read the latest articles, notes, and tutorials on Digital Dossier."
         />
         <link rel="canonical" href={canonicalUrl} />
-
-        {/* Open Graph */}
         <meta property="og:type" content="website" />
         <meta property="og:title" content="Blog Posts | Digital Dossier" />
         <meta
@@ -87,34 +74,28 @@ export default function BlogPage({ blogs }) {
           content="Read the latest articles, notes, and tutorials on Digital Dossier."
         />
         <meta property="og:url" content={canonicalUrl} />
-
-        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Blog Posts | Digital Dossier" />
         <meta
           name="twitter:description"
           content="Read the latest articles, notes, and tutorials on Digital Dossier."
         />
-
-        {/* JSON-LD ItemList */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </Head>
 
-      <div className="px-4 sm:px-8 py-6 lg:py-8">
+      {/* match the Books page wrapper */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6 lg:py-8">
         <h1 className="text-3xl font-bold mb-6">Blog Posts</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+
+        {/* same grid/gap as Books: 1–4 cols, gap-4 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
           {filteredBlogs.map(blog => (
-            <Link legacyBehavior key={blog.id} href={`/blog/${blog.slug}`}>
+            <Link key={blog.id} href={`/blog/${blog.slug}`} legacyBehavior>
               <a className="block">
-                <BlogCard
-                  title={blog.title}
-                  excerpt={blog.summary}
-                  coverUrl={blog.coverUrl}
-                  pdfUrl={blog.pdfUrl}
-                />
+                <BlogCard title={blog.title} coverUrl={blog.coverUrl} />
               </a>
             </Link>
           ))}
