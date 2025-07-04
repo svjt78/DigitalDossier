@@ -187,9 +187,4 @@ Feel free to open issues or pull requests — contributions are welcome!
 
 Built with ❤️ by [Suvojit Dutta](https://www.linkedin.com/in/suvojit-dutta/)
 
-```
 
----
-
-Let me know if you’d like a version that includes badge shields (e.g., deploy status, license, etc.) or GitHub Actions integration.
-```
