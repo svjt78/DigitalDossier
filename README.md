@@ -1,6 +1,3 @@
-Here’s a complete `README.md` tailored for your GitHub repo, based on your full “Digital Dossier” blog site project:
-
----
 
 ```markdown
 # Digital Dossier 📚📝
