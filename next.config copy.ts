@@ -11,11 +11,9 @@ const pdfPrefix     = process.env.S3_CONTENT_PDFS_PREFIX!;
 
 const nextConfig: NextConfig = {
   images: {
-    // Disable server‐side optimization so the browser fetches directly
-    unoptimized: true,
-
-    // You can still declare remotePatterns if you want to enforce
-    // valid sources, but optimization is turned off.
+    // Allow loading from your S3 bucket host
+    domains: [s3Host],
+    // Allow loading specific prefixes via remotePatterns
     remotePatterns: [
       {
         protocol: "https",
@@ -44,7 +42,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_S3_CONTENT_PDFS_PREFIX: pdfPrefix,
   },
 
-  // …other existing config options…
+  // …other existing config options
 };
 
 export default nextConfig;

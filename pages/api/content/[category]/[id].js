@@ -1,3 +1,5 @@
+// pages/api/content/[category]/[id].js
+
 import fs from 'fs';
 import path from 'path';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
@@ -19,7 +21,7 @@ const s3Client = new S3Client({
 // S3 bucket and prefixes
 const BUCKET = process.env.AWS_S3_BUCKET;
 const IMAGES_PREFIX = process.env.S3_CONTENT_IMAGES_PREFIX || 'content-images';
-const PDF_PREFIX = process.env.S3_CONTENT_PDFS_PREFIX || 'content-pdfs';
+const PDF_PREFIX    = process.env.S3_CONTENT_PDFS_PREFIX   || 'content-pdfs';
 
 // Helper to flatten Formidable’s array values
 const getValue = v => Array.isArray(v) ? v[0] : v;
@@ -35,48 +37,40 @@ function parseForm(req) {
   });
 }
 
-// Upload a file to S3 under the given prefix and return its key and URL
+// Upload a file to S3 under the given prefix and return its key
 async function uploadToS3(file, prefix) {
   const ext = path.extname(file.originalFilename || '') || '';
   const filename = file.newFilename + ext;
   const key = `${prefix}/${filename}`;
   const stream = fs.createReadStream(file.filepath || file.path);
 
-  await s3Client.send(
-    new PutObjectCommand({
-      Bucket: BUCKET,
-      Key: key,
-      Body: stream,
-      ContentType: file.mimetype,
-      ACL: 'public-read',
-    })
-  );
+  // Removed ACL because the bucket blocks ACLs
+  await s3Client.send(new PutObjectCommand({
+    Bucket: BUCKET,
+    Key: key,
+    Body: stream,
+    ContentType: file.mimetype,
+  }));
 
-  const encodedName = encodeURIComponent(filename);
-  const url = `https://${BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${prefix}/${encodedName}`;
-  return { key, url };
+  return { key };
 }
 
 // Delete an object from S3 by key
 async function deleteFromS3(key) {
-  await s3Client.send(
-    new DeleteObjectCommand({
-      Bucket: BUCKET,
-      Key: key,
-    })
-  );
+  await s3Client.send(new DeleteObjectCommand({
+    Bucket: BUCKET,
+    Key: key,
+  }));
 }
 
-// Main handler for PUT (update) and DELETE
 export default async function handler(req, res) {
   const { category, id } = req.query;
   const modelMap = {
-    blog: prisma.blog,
-    book: prisma.book,
+    blog:    prisma.blog,
+    book:    prisma.book,
     product: prisma.product,
   };
   const model = modelMap[category];
-
   if (!model) {
     return res.status(400).json({ success: false, error: 'Invalid category' });
   }
@@ -84,7 +78,6 @@ export default async function handler(req, res) {
   const recordId = Number(id);
 
   if (req.method === 'PUT') {
-    // Handle update
     let fields, files;
     try {
       ({ fields, files } = await parseForm(req));
@@ -99,47 +92,61 @@ export default async function handler(req, res) {
     }
 
     const updateData = {};
-    // Flatten and update text fields
+    // flatten and copy text fields
     for (const key of ['title', 'author', 'genre', 'content']) {
       if (fields[key] !== undefined) {
         updateData[key] = getValue(fields[key]);
       }
     }
 
-    // Handle new cover image
+    // handle new cover image
     if (files.coverImage) {
-      const file = Array.isArray(files.coverImage) ? files.coverImage[0] : files.coverImage;
-      const { key: newKey, url: newUrl } = await uploadToS3(file, IMAGES_PREFIX);
-      // Delete old cover from S3
-      if (existing.cover) {
-        const oldPath = new URL(existing.cover).pathname.replace(/^\//, '');
-        await deleteFromS3(oldPath);
+      const file = Array.isArray(files.coverImage)
+        ? files.coverImage[0]
+        : files.coverImage;
+      const { key: newKey } = await uploadToS3(file, IMAGES_PREFIX);
+      if (existing.coverKey) {
+        await deleteFromS3(existing.coverKey);
       }
-      updateData.cover = newUrl;
+      updateData.coverKey = newKey;
     }
 
-    // Handle new PDF file
+    // handle new PDF file
     if (files.pdfFile) {
-      const file = Array.isArray(files.pdfFile) ? files.pdfFile[0] : files.pdfFile;
-      const { key: newKey, url: newUrl } = await uploadToS3(file, PDF_PREFIX);
-      // Delete old PDF from S3
-      if (existing.pdfUrl) {
-        const oldPath = new URL(existing.pdfUrl).pathname.replace(/^\//, '');
-        await deleteFromS3(oldPath);
+      const file = Array.isArray(files.pdfFile)
+        ? files.pdfFile[0]
+        : files.pdfFile;
+      const { key: newKey } = await uploadToS3(file, PDF_PREFIX);
+      if (existing.pdfKey) {
+        await deleteFromS3(existing.pdfKey);
       }
-      updateData.pdfUrl = newUrl;
+      updateData.pdfKey = newKey;
     }
 
     try {
-      const updated = await model.update({ where: { id: recordId }, data: updateData });
-      return res.status(200).json({ success: true, data: updated });
+      const updated = await model.update({
+        where: { id: recordId },
+        data: updateData,
+      });
+
+      // build public URLs for response
+      const region  = process.env.AWS_REGION;
+      const bucket  = process.env.AWS_S3_BUCKET;
+      const baseUrl = `https://${bucket}.s3.${region}.amazonaws.com`;
+
+      const responseData = {
+        ...updated,
+        coverUrl: updated.coverKey ? `${baseUrl}/${encodeURIComponent(updated.coverKey)}` : null,
+        pdfUrl:   updated.pdfKey   ? `${baseUrl}/${encodeURIComponent(updated.pdfKey)}`   : null,
+      };
+
+      return res.status(200).json({ success: true, data: responseData });
     } catch (dbErr) {
       console.error('DB update error:', dbErr);
       return res.status(500).json({ success: false, error: 'Database error' });
     }
 
   } else if (req.method === 'DELETE') {
-    // Handle delete
     const existing = await model.findUnique({ where: { id: recordId } });
     if (!existing) {
       return res.status(404).json({ success: false, error: 'Record not found' });
@@ -152,15 +159,8 @@ export default async function handler(req, res) {
       return res.status(500).json({ success: false, error: 'Database error' });
     }
 
-    // Delete associated S3 assets
-    if (existing.cover) {
-      const oldPath = new URL(existing.cover).pathname.replace(/^\//, '');
-      await deleteFromS3(oldPath);
-    }
-    if (existing.pdfUrl) {
-      const oldPath = new URL(existing.pdfUrl).pathname.replace(/^\//, '');
-      await deleteFromS3(oldPath);
-    }
+    if (existing.coverKey) await deleteFromS3(existing.coverKey);
+    if (existing.pdfKey)   await deleteFromS3(existing.pdfKey);
 
     return res.status(200).json({ success: true });
   } else {
