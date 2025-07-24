@@ -15,6 +15,7 @@ export async function getStaticPaths() {
 export async function getStaticProps({ params }) {
   const productRaw = await prisma.product.findUnique({
     where: { slug: params.slug },
+    include: { genre: true },
   });
 
   if (!productRaw) {
@@ -26,8 +27,7 @@ export async function getStaticProps({ params }) {
   const region  = process.env.AWS_REGION;
   const baseUrl = `https://${bucket}.s3.${region}.amazonaws.com`;
 
-  // Since coverKey/pdfKey already include their folders,
-  // just encodeURI to preserve the slash
+  // Since coverKey/pdfKey already include their folders, just encodeURI to preserve the slash
   const coverUrl = productRaw.coverKey
     ? `${baseUrl}/${encodeURI(productRaw.coverKey)}`
     : null;
@@ -36,9 +36,10 @@ export async function getStaticProps({ params }) {
     ? `${baseUrl}/${encodeURI(productRaw.pdfKey)}`
     : null;
 
-  // Serialize Dates and attach URLs
+  // Serialize Dates and attach URLs and genre
   const product = {
     ...JSON.parse(JSON.stringify(productRaw)),
+    genre: productRaw.genre?.name || null,
     coverUrl,
     pdfUrl,
   };
@@ -63,7 +64,8 @@ export default function ProductDetail({ product }) {
     description,
     url: canonicalUrl,
     image: product.coverUrl ? [product.coverUrl] : undefined,
-    datePublished: product.createdAt, // already serialized to string
+    datePublished: product.createdAt,
+    genre: product.genre,
   };
 
   return (
@@ -128,6 +130,7 @@ export default function ProductDetail({ product }) {
           {product.title}
         </h1>
         <p className="text-gray-300 mb-1">By {product.author}</p>
+        {product.genre && <p className="text-gray-300 mb-4">Genre: {product.genre}</p>}
 
         {product.summary && (
           <p className="mb-4 text-base sm:text-lg text-gray-700">

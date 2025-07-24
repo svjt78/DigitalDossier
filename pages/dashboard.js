@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { useState } from 'react';
 import UploadModal from '@/components/UploadModal';
+import ManageSubscriptionsModal from '@/components/ManageSubscriptionsModal';
 import { Edit2, Trash2 } from 'lucide-react';
 
 export async function getServerSideProps() {
@@ -17,24 +18,18 @@ export async function getServerSideProps() {
     ]);
 
     // pull S3 config from env
-    const bucket    = process.env.AWS_S3_BUCKET;
-    const region    = process.env.AWS_REGION;
-    const imgPrefix = process.env.S3_CONTENT_IMAGES_PREFIX;
-    const pdfPrefix = process.env.S3_CONTENT_PDFS_PREFIX;
+    const bucket = process.env.AWS_S3_BUCKET;
+    const region = process.env.AWS_REGION;
 
-    // helper to build public S3 URL
-    const buildUrl = (prefix, key) =>
-      `https://${bucket}.s3.${region}.amazonaws.com/${prefix}/${encodeURIComponent(key)}`;
+    // helper to build a correct S3 URL from a stored key
+    const buildUrl = (key) =>
+      `https://${bucket}.s3.${region}.amazonaws.com/${encodeURI(key)}`;
 
     // map each record to include full coverUrl/pdfUrl
     const mapUrls = (item) => ({
       ...item,
-      coverUrl: item.coverKey
-        ? buildUrl(imgPrefix, item.coverKey)
-        : null,
-      pdfUrl: item.pdfKey
-        ? buildUrl(pdfPrefix, item.pdfKey)
-        : null,
+      coverUrl: item.coverKey ? buildUrl(item.coverKey) : null,
+      pdfUrl:   item.pdfKey   ? buildUrl(item.pdfKey)   : null,
     });
 
     return {
@@ -54,15 +49,16 @@ export async function getServerSideProps() {
 
 export default function Dashboard({ blogs = [], books = [], products = [] }) {
   // modal + local state
-  const [modalOpen, setModalOpen]           = useState(false);
-  const [localBlogs, setLocalBlogs]         = useState(blogs);
-  const [localBooks, setLocalBooks]         = useState(books);
-  const [localProducts, setLocalProducts]   = useState(products);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [manageModalOpen, setManageModalOpen] = useState(false);
+  const [localBlogs, setLocalBlogs] = useState(blogs);
+  const [localBooks, setLocalBooks] = useState(books);
+  const [localProducts, setLocalProducts] = useState(products);
 
   // filtering & edit/delete state
   const [selectedCategory, setSelectedCategory] = useState('Blog');
-  const [editingItem, setEditingItem]           = useState(null);
-  const [editingCategory, setEditingCategory]   = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
+  const [editingCategory, setEditingCategory] = useState(null);
 
   // select which panel to show
   const handleSelectCategory = (cat) => {
@@ -80,11 +76,7 @@ export default function Dashboard({ blogs = [], books = [], products = [] }) {
 
   // delete via API + remove from state
   const handleDelete = async (item) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete this ${selectedCategory.toLowerCase()}?`
-      )
-    ) {
+    if (!window.confirm(`Are you sure you want to delete this ${selectedCategory.toLowerCase()}?`)) {
       return;
     }
     try {
@@ -109,7 +101,6 @@ export default function Dashboard({ blogs = [], books = [], products = [] }) {
 
   // handle both create & update saves
   const handleUploadSave = (savedItem) => {
-    // close if user cancelled
     if (!savedItem) {
       setModalOpen(false);
       setEditingItem(null);
@@ -142,63 +133,40 @@ export default function Dashboard({ blogs = [], books = [], products = [] }) {
     setEditingCategory(null);
   };
 
-  // SEO metadata
-  const pageTitle    = 'Admin Dashboard | Digital Dossier';
-  const description  = 'Manage blogs, books, and products in the Digital Dossier admin dashboard.';
-  const canonicalUrl = 'https://yourdomain.com/dashboard';
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type":    "WebPage",
-    "name":     pageTitle,
-    "description": description,
-    "url":      canonicalUrl,
-  };
-
   // pick items-to-show based on selectedCategory
   const itemsToShow =
     selectedCategory === 'Blog' ? localBlogs
-  : selectedCategory === 'Book' ? localBooks
-  :                              localProducts;
+    : selectedCategory === 'Book' ? localBooks
+    :                              localProducts;
 
   return (
     <>
       <Head>
-        <title>{pageTitle}</title>
-        <meta name="description" content={description} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:type"        content="website" />
-        <meta property="og:title"       content={pageTitle} />
-        <meta property="og:description" content={description} />
-        <meta property="og:url"         content={canonicalUrl} />
-        <meta name="twitter:card"        content="summary_large_image" />
-        <meta name="twitter:title"       content={pageTitle} />
-        <meta name="twitter:description" content={description} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        <title>Admin Dashboard | Digital Dossier</title>
+        <meta name="description" content="Manage blogs, books, and products in the Digital Dossier admin dashboard." />
       </Head>
 
       <div className="max-w-7xl mx-auto p-4 sm:p-8">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-6">{pageTitle}</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold mb-6">
+          Admin Dashboard | Digital Dossier
+        </h1>
 
-        {/* Upload + Canva buttons */}
-        <div className="flex justify-end mb-6">
+        {/* Upload + Create with Canva + Manage Subscriptions buttons */}
+        <div className="flex justify-end mb-6 space-x-2">
           <button
-            onClick={() => {
-              setEditingItem(null);
-              setEditingCategory(null);
-              setModalOpen(true);
-            }}
+            onClick={() => { setEditingItem(null); setEditingCategory(null); setModalOpen(true); }}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Upload
           </button>
+          <button disabled className="px-4 py-2 bg-gray-400 text-white rounded">
+            Create with Canva
+          </button>
           <button
-            disabled
-            className="ml-2 px-4 py-2 bg-gray-400 text-white rounded"
+            onClick={() => setManageModalOpen(true)}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
           >
-            Canva
+            Manage Subscriptions
           </button>
         </div>
 
@@ -214,13 +182,7 @@ export default function Dashboard({ blogs = [], books = [], products = [] }) {
               <div
                 key={cat}
                 onClick={() => handleSelectCategory(cat)}
-                className={`
-                  cursor-pointer aspect-square p-6 rounded shadow
-                  flex flex-col items-center justify-center
-                  ${isSelected
-                    ? 'bg-blue-900 text-white'
-                    : 'bg-gray-900 text-white'}
-                `}
+                className={`cursor-pointer aspect-square p-6 rounded shadow flex flex-col items-center justify-center ${isSelected ? 'bg-blue-900 text-white' : 'bg-gray-900 text-white'}`}
               >
                 <span className="text-xl font-semibold">{cat}s</span>
                 <span className="text-3xl font-bold mt-2">{count}</span>
@@ -231,9 +193,7 @@ export default function Dashboard({ blogs = [], books = [], products = [] }) {
 
         {/* Filtered list */}
         <div className="space-y-4">
-          <h2 className="text-2xl sm:text-3xl font-semibold mb-4">
-            {selectedCategory}s
-          </h2>
+          <h2 className="text-2xl sm:text-3xl font-semibold mb-4">{selectedCategory}s</h2>
           <ul className="space-y-2">
             {itemsToShow.map((item) => (
               <li
@@ -258,22 +218,14 @@ export default function Dashboard({ blogs = [], books = [], products = [] }) {
                     }
                     legacyBehavior
                   >
-                    <a className="text-orange-400 hover:underline">
-                      {item.title}
-                    </a>
+                    <a className="text-orange-400 hover:underline">{item.title}</a>
                   </Link>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => handleEdit(item)}
-                    className="p-1 hover:text-blue-500"
-                  >
+                  <button onClick={() => handleEdit(item)} className="p-1 hover:text-blue-500">
                     <Edit2 size={20} />
                   </button>
-                  <button
-                    onClick={() => handleDelete(item)}
-                    className="p-1 hover:text-red-500"
-                  >
+                  <button onClick={() => handleDelete(item)} className="p-1 hover:text-red-500">
                     <Trash2 size={20} />
                   </button>
                 </div>
@@ -281,25 +233,20 @@ export default function Dashboard({ blogs = [], books = [], products = [] }) {
             ))}
           </ul>
         </div>
-      </div>
 
-      {/* Modal for both create & edit */}
-      {modalOpen && (
-        <UploadModal
-          isOpen={modalOpen}
-          onClose={() => {
-            setModalOpen(false);
-            setEditingItem(null);
-            setEditingCategory(null);
-          }}
-          onSave={handleUploadSave}
-          initialData={
-            editingItem
-              ? { ...editingItem, category: editingCategory }
-              : {}
-          }
-        />
-      )}
+        {/* Modals */}
+        {modalOpen && (
+          <UploadModal
+            isOpen={modalOpen}
+            onClose={() => setModalOpen(false)}
+            onSave={handleUploadSave}
+            initialData={editingItem ? { ...editingItem, category: editingCategory } : {}}
+          />
+        )}
+        {manageModalOpen && (
+          <ManageSubscriptionsModal onClose={() => setManageModalOpen(false)} />
+        )}
+      </div>
     </>
   );
 }

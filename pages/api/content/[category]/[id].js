@@ -1,5 +1,3 @@
-// pages/api/content/[category]/[id].js
-
 import fs from 'fs';
 import path from 'path';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
@@ -44,11 +42,10 @@ async function uploadToS3(file, prefix) {
   const key = `${prefix}/${filename}`;
   const stream = fs.createReadStream(file.filepath || file.path);
 
-  // Removed ACL because the bucket blocks ACLs
   await s3Client.send(new PutObjectCommand({
-    Bucket: BUCKET,
-    Key: key,
-    Body: stream,
+    Bucket:      BUCKET,
+    Key:         key,
+    Body:        stream,
     ContentType: file.mimetype,
   }));
 
@@ -59,7 +56,7 @@ async function uploadToS3(file, prefix) {
 async function deleteFromS3(key) {
   await s3Client.send(new DeleteObjectCommand({
     Bucket: BUCKET,
-    Key: key,
+    Key:    key,
   }));
 }
 
@@ -92,11 +89,20 @@ export default async function handler(req, res) {
     }
 
     const updateData = {};
-    // flatten and copy text fields
-    for (const key of ['title', 'author', 'genre', 'content']) {
+    // flatten and copy text fields (omit genre)
+    for (const key of ['title', 'author', 'content']) {
       if (fields[key] !== undefined) {
         updateData[key] = getValue(fields[key]);
       }
+    }
+
+    // handle genreId scalar directly
+    if (fields.genreId !== undefined) {
+      const genreId = parseInt(getValue(fields.genreId), 10);
+      if (Number.isNaN(genreId)) {
+        return res.status(400).json({ success: false, error: 'Invalid genre ID' });
+      }
+      updateData.genreId = genreId;
     }
 
     // handle new cover image
@@ -105,9 +111,7 @@ export default async function handler(req, res) {
         ? files.coverImage[0]
         : files.coverImage;
       const { key: newKey } = await uploadToS3(file, IMAGES_PREFIX);
-      if (existing.coverKey) {
-        await deleteFromS3(existing.coverKey);
-      }
+      if (existing.coverKey) await deleteFromS3(existing.coverKey);
       updateData.coverKey = newKey;
     }
 
@@ -117,10 +121,16 @@ export default async function handler(req, res) {
         ? files.pdfFile[0]
         : files.pdfFile;
       const { key: newKey } = await uploadToS3(file, PDF_PREFIX);
-      if (existing.pdfKey) {
-        await deleteFromS3(existing.pdfKey);
-      }
+      if (existing.pdfKey) await deleteFromS3(existing.pdfKey);
       updateData.pdfKey = newKey;
+    }
+
+    // preserve existing S3 keys when no new file was uploaded
+    if (!files.coverImage) {
+      updateData.coverKey = existing.coverKey;
+    }
+    if (!files.pdfFile) {
+      updateData.pdfKey = existing.pdfKey;
     }
 
     try {
@@ -135,9 +145,19 @@ export default async function handler(req, res) {
       const baseUrl = `https://${bucket}.s3.${region}.amazonaws.com`;
 
       const responseData = {
-        ...updated,
-        coverUrl: updated.coverKey ? `${baseUrl}/${encodeURIComponent(updated.coverKey)}` : null,
-        pdfUrl:   updated.pdfKey   ? `${baseUrl}/${encodeURIComponent(updated.pdfKey)}`   : null,
+        id:        updated.id,
+        title:     updated.title,
+        slug:      updated.slug,
+        author:    updated.author,
+        genreId:   updated.genreId,
+        summary:   updated.summary,
+        content:   updated.content,
+        coverKey:  updated.coverKey,
+        pdfKey:    updated.pdfKey,
+        coverUrl:  updated.coverKey ? `${baseUrl}/${encodeURIComponent(updated.coverKey)}` : null,
+        pdfUrl:    updated.pdfKey   ? `${baseUrl}/${encodeURIComponent(updated.pdfKey)}`   : null,
+        createdAt: updated.createdAt,
+        updatedAt: updated.updatedAt,
       };
 
       return res.status(200).json({ success: true, data: responseData });

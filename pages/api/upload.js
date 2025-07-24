@@ -1,5 +1,3 @@
-// pages/api/upload.js
-
 import fs from 'fs';
 import path from 'path';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
@@ -71,26 +69,22 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Error parsing form data' });
   }
 
-  const getField = name =>
-    Array.isArray(fields[name]) ? fields[name][0] : fields[name] || '';
+  const getField = name => Array.isArray(fields[name]) ? fields[name][0] : fields[name] || '';
   const title    = getField('title').trim();
   const author   = getField('author').trim();
   const category = getField('category').trim();
-  const genre    = getField('genre').trim();
-  const content  = getField('content');
+  const genreId  = parseInt(getField('genreId'), 10);
+  const content  = getField('content') || '';
 
-  // Enforce required fields: Category, Title, Cover Image, PDF
-  const coverFile = Array.isArray(files.coverImage)
-    ? files.coverImage[0]
-    : files.coverImage;
-  const pdfFile = Array.isArray(files.pdfFile)
-    ? files.pdfFile[0]
-    : files.pdfFile;
+  // Validate required fields
+  const coverFile = Array.isArray(files.coverImage) ? files.coverImage[0] : files.coverImage;
+  const pdfFile   = Array.isArray(files.pdfFile)   ? files.pdfFile[0]   : files.pdfFile;
 
   if (!category || !title || !coverFile || !pdfFile) {
-    return res.status(400).json({
-      error: 'Category, Title, Cover Image and PDF file are all required.'
-    });
+    return res.status(400).json({ error: 'Category, Title, Cover Image and PDF file are all required.' });
+  }
+  if (Number.isNaN(genreId)) {
+    return res.status(400).json({ error: 'Invalid genre ID' });
   }
 
   const modelMap = {
@@ -103,9 +97,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid category' });
   }
 
-  // Upload files
-  let coverKey = null, coverUrl = null;
-  let pdfKey   = null, pdfUrl   = null;
+  // Upload files to S3
+  let coverKey, coverUrl, pdfKey, pdfUrl;
   try {
     ({ key: coverKey, url: coverUrl } = await uploadToS3(coverFile, IMAGES_PREFIX));
     ({ key: pdfKey,   url: pdfUrl   } = await uploadToS3(pdfFile,   PDF_PREFIX));
@@ -116,29 +109,28 @@ export default async function handler(req, res) {
 
   // Unique slug generation
   const baseSlug = slugify(title, { lower: true, strict: true });
-  let uniqueSlug = baseSlug, counter = 1;
+  let uniqueSlug = baseSlug;
+  let counter = 1;
   while (await model.findUnique({ where: { slug: uniqueSlug } })) {
     uniqueSlug = `${baseSlug}-${counter++}`;
   }
 
   const summary = getField('summary') || content.substring(0, 200);
 
-  // Prepare DB data
+  // Prepare DB data with nested connect for genre
   const commonData = {
     title,
-    slug:     uniqueSlug,
+    slug:    uniqueSlug,
     author,
-    genre,
     summary,
     content: '',
     coverKey,
     pdfKey,
+    genre: { connect: { id: genreId } },
   };
 
   try {
     const newEntry = await model.create({ data: commonData });
-
-    // Respond with both DB fields and public URLs
     return res.status(200).json({
       success: true,
       data: {

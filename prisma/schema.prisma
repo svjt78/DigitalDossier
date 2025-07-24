@@ -7,12 +7,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Genre {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  blogs     Blog[]    @relation("BlogGenre")
+  books     Book[]    @relation("BookGenre")
+  products  Product[] @relation("ProductGenre")
+
+  @@map("genre")
+}
+
 model Blog {
   id        Int       @id @default(autoincrement())
   title     String
   slug      String    @unique
   author    String
-  genre     String?
+  genreId   Int?      @map("genre_id")
+  genre     Genre?    @relation("BlogGenre", fields: [genreId], references: [id])
   summary   String?
   content   String
   coverKey  String?   @map("cover_key")
@@ -29,7 +40,8 @@ model Book {
   title     String
   slug      String    @unique
   author    String
-  genre     String?
+  genreId   Int?      @map("genre_id")
+  genre     Genre?    @relation("BookGenre", fields: [genreId], references: [id])
   summary   String
   content   String
   coverKey  String?   @map("cover_key")
@@ -46,7 +58,8 @@ model Product {
   title     String
   slug      String       @unique
   author    String
-  genre     String?
+  genreId   Int?         @map("genre_id")
+  genre     Genre?       @relation("ProductGenre", fields: [genreId], references: [id])
   summary   String
   content   String
   coverKey  String?      @map("cover_key")
@@ -105,4 +118,12 @@ model Profile {
   updatedAt  DateTime @updatedAt           @map("updated_at")
 
   @@map("profile")
+}
+
+model Subscriber {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("subscriber")
 }

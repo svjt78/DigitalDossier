@@ -1,5 +1,3 @@
-// pages/blog/[slug].js
-
 import Head from 'next/head';
 import Image from 'next/image';
 import { prisma } from '@/lib/prisma';
@@ -13,16 +11,20 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps({ params }) {
-  const blogRaw = await prisma.blog.findUnique({ where: { slug: params.slug } });
+  const blogRaw = await prisma.blog.findUnique({
+    where: { slug: params.slug },
+    include: { genre: true },
+  });
+
   if (!blogRaw) {
     return { notFound: true };
   }
 
-  const bucket       = process.env.AWS_S3_BUCKET;
-  const region       = process.env.AWS_REGION;
+  const bucket = process.env.AWS_S3_BUCKET;
+  const region = process.env.AWS_REGION;
   const imagesPrefix = process.env.S3_CONTENT_IMAGES_PREFIX;
-  const pdfPrefix    = process.env.S3_CONTENT_PDFS_PREFIX;
-  const baseUrl      = `https://${bucket}.s3.${region}.amazonaws.com`;
+  const pdfPrefix = process.env.S3_CONTENT_PDFS_PREFIX;
+  const baseUrl = `https://${bucket}.s3.${region}.amazonaws.com`;
 
   const coverUrl = blogRaw.coverKey
     ? `${baseUrl}/${imagesPrefix}/${blogRaw.coverKey
@@ -45,18 +47,18 @@ export async function getStaticProps({ params }) {
   return {
     props: {
       blog: {
-        id:        blogRaw.id,
-        title:     blogRaw.title,
-        slug:      blogRaw.slug,
-        author:    blogRaw.author,
-        genre:     blogRaw.genre,
-        summary:   blogRaw.summary,
-        content:   blogRaw.content,
+        id: blogRaw.id,
+        title: blogRaw.title,
+        slug: blogRaw.slug,
+        author: blogRaw.author,
+        genre: blogRaw.genre?.name || null,
+        summary: blogRaw.summary,
+        content: blogRaw.content,
         coverUrl,
         pdfUrl,
-        createdAt: blogRaw.createdAt.toISOString(),    // serialized for Next.js :contentReference[oaicite:0]{index=0}
+        createdAt: blogRaw.createdAt.toISOString(),
         updatedAt: blogRaw.updatedAt.toISOString(),
-      }
+      },
     },
     revalidate: 60,
   };
@@ -67,16 +69,17 @@ export default function BlogDetail({ blog }) {
   const handleOpenPdf = () => setPdfViewerOpen(true);
 
   const canonicalUrl = `https://yourdomain.com/blog/${blog.slug}`;
-  const description  = blog.summary || blog.content.slice(0, 155);
+  const description = blog.summary || blog.content.slice(0, 155);
 
   const jsonLd = {
-    "@context":       "https://schema.org",
-    "@type":          "BlogPosting",
-    headline:         blog.title,
-    image:            blog.coverUrl ? [blog.coverUrl] : undefined,
-    author:           { "@type": "Person", name: blog.author },
-    datePublished:    blog.createdAt,
-    dateModified:     blog.updatedAt,
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: blog.title,
+    image: blog.coverUrl ? [blog.coverUrl] : undefined,
+    author: { "@type": "Person", name: blog.author },
+    genre: blog.genre,
+    datePublished: blog.createdAt,
+    dateModified: blog.updatedAt,
     description,
     mainEntityOfPage: { "@type": "WebPage", "@id": canonicalUrl },
   };
@@ -106,7 +109,7 @@ export default function BlogDetail({ blog }) {
       </Head>
 
       <div className="w-full px-4 sm:px-8 mx-auto max-w-full sm:max-w-xl lg:max-w-3xl">
-        {/* Cover image: only this element is clickable */}
+        {/* Cover image */}
         {blog.coverUrl && (
           <div
             className="cursor-pointer mb-6"
@@ -125,7 +128,7 @@ export default function BlogDetail({ blog }) {
           </div>
         )}
 
-        {/* Separate PDF button, so text clicks don’t propagate to the image */}
+        {/* PDF button */}
         {blog.pdfUrl && (
           <div className="text-center mb-6">
             <button
@@ -139,6 +142,7 @@ export default function BlogDetail({ blog }) {
 
         <h1 className="text-3xl sm:text-4xl font-bold mb-4">{blog.title}</h1>
         <p className="text-gray-300 mb-1">By {blog.author}</p>
+        {blog.genre && <p className="text-gray-300 mb-4">Genre: {blog.genre}</p>}
         {blog.summary && <p className="mb-6 text-gray-400">{blog.summary}</p>}
 
         <article className="prose prose-invert max-w-none mb-8" role="article">

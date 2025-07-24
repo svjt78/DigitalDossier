@@ -13,10 +13,11 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps({ params }) {
-  const book = await prisma.book.findUnique({
+  const bookRaw = await prisma.book.findUnique({
     where: { slug: params.slug },
+    include: { genre: true },
   })
-  if (!book) {
+  if (!bookRaw) {
     return { notFound: true }
   }
 
@@ -28,22 +29,23 @@ export async function getStaticProps({ params }) {
   const baseUrl = `https://${bucket}.s3.${region}.amazonaws.com`
 
   let coverUrl = null
-  if (book.coverKey) {
-    const filename = book.coverKey.split('/').pop()
+  if (bookRaw.coverKey) {
+    const filename = bookRaw.coverKey.split('/').pop()
     coverUrl = `${baseUrl}/${imagesPrefix}/${encodeURIComponent(filename)}`
   }
 
   let pdfUrl = null
-  if (book.pdfKey) {
-    const filename = book.pdfKey.split('/').pop()
+  if (bookRaw.pdfKey) {
+    const filename = bookRaw.pdfKey.split('/').pop()
     pdfUrl = `${baseUrl}/${pdfsPrefix}/${encodeURIComponent(filename)}`
   }
 
-  // Serialize dates to ISO strings for Next.js
+  // Serialize and include genre name
   const serializedBook = {
-    ...book,
-    createdAt: book.createdAt.toISOString(),
-    updatedAt: book.updatedAt.toISOString(),
+    ...bookRaw,
+    genre: bookRaw.genre?.name || null,
+    createdAt: bookRaw.createdAt.toISOString(),
+    updatedAt: bookRaw.updatedAt.toISOString(),
     coverUrl,
     pdfUrl,
   }
@@ -70,6 +72,7 @@ export default function BookDetail({ book }) {
       "@type": "Person",
       name: book.author,
     },
+    genre: book.genre,
     description,
     url: canonicalUrl,
     image: book.coverUrl ? [book.coverUrl] : undefined,
@@ -145,6 +148,7 @@ export default function BookDetail({ book }) {
           {book.title}
         </h1>
         <p className="text-gray-300 mb-1">By {book.author}</p>
+        {book.genre && <p className="text-gray-300 mb-4">Genre: {book.genre}</p>}
         <p className="text-gray-400 mb-4">{book.summary}</p>
 
         <article
