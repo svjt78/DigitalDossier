@@ -1,8 +1,10 @@
-// pages/_app.js
+// File: pages/_app.js
+
 import '../styles/globals.css';
 import Head from 'next/head';
 import Layout from '@/components/Layout';
 import { SearchProvider } from '@/components/SearchContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 export default function App({ Component, pageProps }) {
   return (
@@ -40,11 +42,13 @@ export default function App({ Component, pageProps }) {
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
 
-      <SearchProvider>
-        <Layout>
-          <Component {...pageProps} />
-        </Layout>
-      </SearchProvider>
+      <AuthProvider>
+        <SearchProvider>
+          <Layout>
+            <Component {...pageProps} />
+          </Layout>
+        </SearchProvider>
+      </AuthProvider>
     </>
   );
 }

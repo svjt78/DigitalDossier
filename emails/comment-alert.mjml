@@ -1,0 +1,91 @@
+<mjml>
+  <mj-body background-color="#F0F0F0">
+    <mj-section padding="20px 0">
+      <mj-column
+        width="100%"
+        background-color="#ffffff"
+        padding="20px"
+        border-radius="8px"
+      >
+        <mj-text
+          font-size="20px"
+          font-weight="bold"
+          color="#333333"
+        >
+          New Comment on “{{postTitle}}”
+        </mj-text>
+
+        <mj-text
+          font-size="16px"
+          line-height="1.5"
+          color="#555555"
+        >
+          Hi {{authorName}},
+        </mj-text>
+
+        <mj-text
+          font-size="16px"
+          line-height="1.5"
+          color="#555555"
+        >
+          {{commenter}} just left a comment on your post:
+        </mj-text>
+
+        <mj-text
+          font-size="16px"
+          line-height="1.5"
+          color="#333333"
+          font-style="italic"
+        >
+          “{{commentText}}”
+        </mj-text>
+
+        <mj-button
+          href="{{commentLink}}"
+          background-color="#2563EB"
+          color="#ffffff"
+          font-size="16px"
+          padding="12px 24px"
+          border-radius="4px"
+        >
+          View Comment
+        </mj-button>
+
+        <mj-text
+          font-size="14px"
+          color="#888888"
+          line-height="1.4"
+        >
+          If that button doesn’t work, copy and paste this URL into your browser:
+        </mj-text>
+
+        <mj-text
+          font-size="14px"
+          color="#2563EB"
+          word-break="break-all"
+        >
+          {{commentLink}}
+        </mj-text>
+
+        <mj-divider border-color="#E0E0E0" />
+
+        <mj-text
+          font-size="12px"
+          color="#AAAAAA"
+          line-height="1.4"
+        >
+          You’re receiving this because you authored the post “{{postTitle}}”.
+        </mj-text>
+
+        <mj-text
+          font-size="12px"
+          color="#AAAAAA"
+          line-height="1.4"
+        >
+          Cheers,<br/>
+          The Digital Dossier Team
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

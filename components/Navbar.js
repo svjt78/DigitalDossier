@@ -5,6 +5,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { X } from 'lucide-react';
 import SubscriptionForm from './SubscriptionForm';
+import { AuthContext } from '@/contexts/AuthContext';
 
 export const FilterContext = createContext('all');
 export function useFilter() {
@@ -18,18 +19,13 @@ const menuItems = [
 export default function Navbar() {
   const router = useRouter();
   const activeFilter = router.query.filter || 'all';
+  const { userId } = useContext(AuthContext);
+  const isAuthenticated = Boolean(userId);
 
-  // controls the modal
+  // controls the subscription modal
   const [showSubscribe, setShowSubscribe] = useState(false);
-  // tracks auth
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // on mount, read token
-  useEffect(() => {
-    setIsAuthenticated(!!localStorage.getItem('access_token'));
-  }, []);
-
-  // only auto-open when we have both the redirect param AND the user is authenticated
+  // auto-open if redirected here and actually logged in
   useEffect(() => {
     if (router.query.redirect === 'subscribe' && isAuthenticated) {
       setShowSubscribe(true);
@@ -39,10 +35,8 @@ export default function Navbar() {
 
   const handleSubscribeClick = () => {
     if (!isAuthenticated) {
-      // send to login first
       router.push('/login?redirect=subscribe');
     } else {
-      // already logged in, show the form
       setShowSubscribe(true);
     }
   };
@@ -83,7 +77,7 @@ export default function Navbar() {
       </nav>
 
       {showSubscribe && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60">
           <div className="relative bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl">
             <button
               onClick={() => setShowSubscribe(false)}

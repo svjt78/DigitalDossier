@@ -127,3 +127,14 @@ model Subscriber {
 
   @@map("subscriber")
 }
+
+model User {
+  id                Int      @id @default(autoincrement())
+  email             String   @unique
+  name              String?  // usernames can repeat and may be null
+  credentialUserId  String?  @map("credential_user_id") // optional, for observability
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt      @map("updated_at")
+
+  @@map("user")
+}

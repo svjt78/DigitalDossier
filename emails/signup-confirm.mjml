@@ -1,0 +1,59 @@
+<!-- File: emails/signup-confirm.mjml -->
+<mjml>
+  <mj-body background-color="#F0F0F0">
+    <mj-section padding="20px 0">
+      <mj-column
+        width="100%"
+        background-color="#ffffff"
+        padding="20px"
+        border-radius="8px"
+      >
+        <mj-text
+          font-size="20px"
+          font-weight="bold"
+          color="#333333"
+        >
+          Welcome to Digital Dossier, {{username}}!
+        </mj-text>
+
+        <mj-text
+          font-size="16px"
+          line-height="1.5"
+          color="#555555"
+        >
+          Your account has been created successfully. We’re thrilled to have you on board.
+        </mj-text>
+
+        <mj-button
+          href="{{loginLink}}"
+          background-color="#2563EB"
+          color="#ffffff"
+          font-size="16px"
+          padding="12px 24px"
+          border-radius="4px"
+        >
+          Confirm your email and log in
+        </mj-button>
+
+        <mj-text
+          font-size="14px"
+          color="#888888"
+          line-height="1.4"
+        >
+          If you didn’t sign up for this, please ignore this email.
+        </mj-text>
+
+        <mj-divider border-color="#E0E0E0" />
+
+        <mj-text
+          font-size="12px"
+          color="#AAAAAA"
+          line-height="1.4"
+        >
+          Cheers,<br/>
+          The Digital Dossier Team
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

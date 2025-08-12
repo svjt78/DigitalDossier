@@ -1,24 +1,36 @@
 # ========== DEVELOPMENT IMAGE ==========
 FROM node:18-alpine
 
-# 1. Set working directory
+# 1) System deps
+RUN apk update && apk add --no-cache \
+    postgresql-client \
+    libc6-compat    # helps with sharp/libstdc++ issues on Alpine
+
+# 2) Workdir
 WORKDIR /app
 
-# 2. Copy package manifests & install ALL deps (including dev)
+# 3) Install deps with cache-friendly layering
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# 3. Copy Prisma schema, generate client
+# 4) Prisma schema (generate is optional here; see note below)
 COPY prisma ./prisma
-RUN npx prisma generate
+# RUN npx prisma generate  # ← redundant; compose runs this at container start
 
-# 4. Copy the rest of the source
+# 5) App source
 COPY . .
 
-# 5. Expose port defined in .env (default 3003)
+# 6) Dev env & port
 ARG PORT=3003
 ENV PORT=${PORT}
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+# Optional (Docker Desktop): reliable file watching
+# ENV CHOKIDAR_USEPOLLING=1
+# ENV WATCHPACK_POLLING=true
 
-# 6. Start Next.js in dev mode (hot-reload)
-#    Use the "dev" script from package.json, which already includes "-p 3003"
+# 7) Expose (nice-to-have)
+EXPOSE 3003
+
+# 8) Start Next.js in dev mode (hot-reload)
 CMD ["npm", "run", "dev"]

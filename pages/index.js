@@ -1,4 +1,6 @@
 // pages/index.js
+console.log('🔥 pages/index.js sees ENV.DATABASE_URL =', process.env.DATABASE_URL);
+
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -15,6 +17,7 @@ const badgeClasses = {
 };
 
 export async function getStaticProps() {
+  console.log('>>> pages/index.js getStaticProps sees DATABASE_URL =', process.env.DATABASE_URL);
   // fetch all content
   const [blogs, books, products] = await Promise.all([
     prisma.blog.findMany({ orderBy: { createdAt: 'desc' } }),

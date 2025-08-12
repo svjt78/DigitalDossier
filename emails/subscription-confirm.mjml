@@ -1,0 +1,12 @@
+<mjml>
+  <mj-body>
+    <mj-section>
+      <mj-column>
+        <mj-text font-size="20px">Welcome, {{email}}!</mj-text>
+        <mj-text>
+          Thanks for subscribing to Digital Dossier. You’ll now receive our latest posts right to your inbox.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
