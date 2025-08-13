@@ -1,186 +1,313 @@
-```markdown
-# Digital Dossier 📚📝
+# Digital Dossier
 
-**Digital Dossier** is a fully responsive and SEO-friendly personal blog and content hub built using **Next.js**, **Tailwind CSS**, **Prisma**, **PostgreSQL**, and **AWS S3**. It supports uploading and viewing **blogs**, **books**, and **product documents**, with cover images, PDF viewing/downloading, and admin-level content management.
+Digital Dossier is a modern, full-stack content management platform designed for organizing and sharing digital content including blogs, books, and products. Built with Next.js and PostgreSQL, it provides a seamless experience for content creators and readers with features like real-time voting, threaded comments, and PDF integration.
 
-## 🚀 Live Demo
+## Features
 
-*(Insert live site link here once deployed, e.g. `https://digitaldossier.com`)*
+- **Multi-Content Support**: Manage blogs, books, and products in a unified interface
+- **PDF Integration**: Upload, store, and view PDF documents with a full-screen viewer
+- **Real-time Engagement**: Voting system with optimistic updates and threaded comments
+- **Search & Filtering**: Advanced search functionality with category-based filtering
+- **User Authentication**: Secure authentication system with session management
+- **AWS S3 Integration**: Scalable file storage for images and PDFs
+- **Responsive Design**: Mobile-first design with Tailwind CSS
+- **SEO Optimized**: Built-in SEO features with OpenGraph and Twitter Card support
+- **Email Notifications**: MJML-based email templates with Nodemailer integration
 
-## 📸 Preview
+## Architecture
 
-*(Insert screenshots or GIFs showcasing blog cards, admin panel, modal forms, and PDF viewer)*
-
----
-
-## 🛠️ Features
-
-- 🧾 **Document Upload & Metadata Management**  
-  Upload PDFs and cover images for Blogs, Books, and Products via an Admin panel.
-
-- 🖼️ **Cover Image & PDF Viewer**  
-  Public-facing pages show visually styled cards with on-click full-screen PDF viewing and download support.
-
-- 🔍 **Search, Filter, and Slugs**  
-  Dynamic search for all artifact types. Individual slugs show detailed views (`/blogs/[slug]`, etc.).
-
-- 🧰 **Admin Dashboard**
-  - Upload new content (blogs, books, products)
-  - Edit metadata and replace image/PDF (via modal)
-  - Delete content with S3 + Postgres cleanup
-  - Dashboard overview with counts of each type
-  - Confirmation dialog on delete
-
-- 🎨 **Canva Integration** *(Planned)*  
-  Create cover designs and documents from templates, then save into the platform.
-
-- 📈 **Google Analytics Integration** *(Planned)*  
-  Track visits, engagement, and popular content.
-
-- 📣 **Community & Social Sharing** *(Planned)*  
-  Email signups, LinkedIn/X sharing buttons.
-
-- ☁️ **Storage on AWS S3**  
-  Content is uploaded to and served from S3. Public URLs are composed dynamically.
-
-- 🖥️ **Responsive UI + SEO-friendly**  
-  Built for all devices with accessibility and performance in mind.
-
----
-
-## 🧩 Tech Stack
-
-| Layer        | Tech                                 |
-|--------------|--------------------------------------|
-| Frontend     | Next.js, React, Tailwind CSS         |
-| Backend      | Node.js, API routes, Prisma ORM      |
-| Database     | PostgreSQL                           |
-| File Storage | AWS S3 (replaced MinIO in prod)      |
-| Viewer       | Custom full-screen PDF modal         |
-| Deployment   | Docker Compose                       |
-
----
-
-## 📁 Project Structure
+Digital Dossier follows a modern web architecture pattern:
 
 ```
-
-.
-├── components/         # Reusable UI components (Cards, Modals, Sidebar, etc.)
-├── lib/                # Prisma client setup
-├── pages/              # Next.js pages (blogs, books, products, admin, etc.)
-├── public/             # Static assets
-├── styles/             # Tailwind globals
-├── docker-compose.yml  # Containerized app setup
-├── .env                # Env vars for Postgres and S3
-└── prisma/
-└── schema.prisma   # Prisma data models
-
-````
-
----
-
-## 🧪 Local Development
-
-### 🧰 Prerequisites
-
-- Node.js 18+
-- Docker + Docker Compose
-- AWS S3 bucket + IAM user with credentials
-- PostgreSQL database
-
-### 🏁 Setup
-
-```bash
-# 1. Clone the repo
-git clone https://github.com/yourusername/digital-dossier.git
-cd digital-dossier
-
-# 2. Create your .env file from the example
-cp .env.example .env
-# Set your AWS, DB, and app config values
-
-# 3. Start with Docker Compose
-docker-compose up --build
-
-# App runs at http://localhost:3003
-````
-
-### 🔄 Prisma Commands
-
-```bash
-# Generate Prisma client
-npx prisma generate
-
-# Apply schema to DB
-npx prisma migrate dev --name init
+Frontend (Next.js 15) → API Routes → Prisma ORM → PostgreSQL
+                     ↘ AWS S3 (File Storage)
 ```
 
----
+### Technology Stack
 
-## 🔒 Environment Variables
+- **Frontend**: Next.js 15, React 19, Tailwind CSS
+- **Backend**: Next.js API Routes, Prisma ORM
+- **Database**: PostgreSQL with optimized indexing
+- **File Storage**: AWS S3 with CDN delivery
+- **Authentication**: Custom JWT-based authentication
+- **Email**: MJML templates with Nodemailer
+- **Deployment**: Docker containerization
 
-The `.env` file contains keys like:
+## Installation
 
-```env
-DATABASE_URL=postgresql://user:pass@host:port/db
-AWS_ACCESS_KEY_ID=xxx
-AWS_SECRET_ACCESS_KEY=yyy
+### Prerequisites
+
+- Node.js 18+ 
+- Docker and Docker Compose
+- AWS S3 bucket for file storage
+- SMTP server for email functionality
+
+### Quick Start
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd books-dashboard
+   ```
+
+2. **Environment Setup**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+3. **Start with Docker**
+   ```bash
+   docker-compose up -d
+   ```
+
+   The application will be available at `http://localhost:3003`
+
+### Manual Setup
+
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Database setup**
+   ```bash
+   npx prisma migrate dev
+   npx prisma generate
+   ```
+
+3. **Start development server**
+   ```bash
+   npm run dev
+   ```
+
+## Configuration
+
+### Required Environment Variables
+
+```bash
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/blogdb
+
+# AWS S3 Configuration
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
 AWS_REGION=us-east-1
 AWS_S3_BUCKET=your-bucket-name
+
+# S3 Prefixes
+S3_CONTENT_IMAGES_PREFIX=content-images
+S3_CONTENT_PDFS_PREFIX=content-pdfs
+S3_AVATARS_PREFIX=avatars
+
+# Authentication
+CREDENTIAL_INTERNAL_TOKEN=your_secure_token
+
+# Email Configuration
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
+
+# Application URLs
+NEXT_PUBLIC_BASE_URL=http://localhost:3003
+SITE_URL=https://yourdomain.com
+
+# Revalidation (for ISR)
+REVALIDATION_TOKEN=your_revalidation_token
 ```
 
+## API Endpoints
+
+### Content Management
+- `GET /api/blog` - List all blog posts
+- `GET /api/blog/[slug]` - Get specific blog post
+- `POST /api/upload` - Upload files to S3
+
+### User Engagement
+- `GET /api/votes/[contentType]/[contentId]` - Get vote status
+- `POST /api/votes/[contentType]/[contentId]` - Cast vote
+- `DELETE /api/votes/[contentType]/[contentId]` - Remove vote
+
+### Comments System
+- `GET /api/comments/[contentType]/[contentId]` - Get threaded comments
+- `POST /api/comments/[contentType]/[contentId]` - Create comment
+
+### Utility
+- `POST /api/revalidate` - Trigger on-demand revalidation
+- `GET /api/genres/stats` - Get genre usage statistics
+
+## Database Schema
+
+The application uses Prisma ORM with the following core models:
+
+- **Content Models**: `Blog`, `Book`, `Product` with shared voting/comment aggregates
+- **User Engagement**: `Vote`, `Comment` with polymorphic content relationships
+- **Organization**: `Genre`, `Tag` with many-to-many relationships
+- **Users**: `User`, `Profile` with authentication support
+
+### Key Features
+
+- **Polymorphic Relationships**: Votes and comments work across all content types
+- **Aggregated Counters**: Real-time vote scores and comment counts
+- **Threaded Comments**: Unlimited depth comment threading
+- **Performance Indexes**: Optimized for common query patterns
+
+## Development
+
+### Project Structure
+
+```
+├── components/          # Reusable React components
+├── contexts/           # React context providers
+├── lib/               # Utility libraries and helpers
+├── pages/             # Next.js pages and API routes
+│   ├── api/          # Backend API endpoints
+│   ├── blog/         # Blog-related pages
+│   ├── books/        # Book-related pages
+│   └── products/     # Product-related pages
+├── prisma/           # Database schema and migrations
+├── public/           # Static assets
+├── styles/           # Global CSS and Tailwind config
+└── migrations/       # Custom database migrations
+```
+
+### Key Components
+
+- **VotingWidget**: Real-time voting with optimistic updates
+- **CommentsSection**: Threaded comment system
+- **FullScreenPDFViewer**: Integrated PDF viewing experience
+- **GenreSelector**: Dynamic genre management with usage statistics
+- **Layout**: Responsive navigation and search functionality
+
+### Development Scripts
+
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+npx prisma studio    # Database administration GUI
+```
+
+## Testing
+
+### Database Consistency
+
+The application includes built-in database functions for monitoring and maintaining data integrity:
+
+```sql
+-- Check vote count consistency
+SELECT * FROM check_vote_consistency();
+
+-- Fix any inconsistencies
+SELECT fix_all_vote_inconsistencies();
+```
+
+### Performance Monitoring
+
+- Database triggers ensure vote/comment aggregates stay synchronized
+- Optimistic UI updates provide immediate user feedback
+- ISR (Incremental Static Regeneration) with 10-second revalidation
+- Performance indexes on high-traffic query patterns
+
+## Deployment
+
+### Production Build
+
+```bash
+# Build the application
+npm run build
+
+# Generate sitemap
+npm run postbuild
+
+# Start production server
+npm start
+```
+
+### Docker Deployment
+
+```bash
+# Production build
+docker-compose -f docker-compose.prod.yml up -d
+
+# With custom environment
+docker-compose --env-file .env.prod up -d
+```
+
+### Database Migrations
+
+```bash
+# Apply pending migrations
+npx prisma migrate deploy
+
+# Apply custom migrations
+cat migrations/fix_voting_consistency.sql | psql $DATABASE_URL
+```
+
+## Future Development
+
+Digital Dossier is actively evolving with several exciting features planned:
+
+### Content Creation & Design
+- **Canva Integration**: Direct integration with Canva for in-app content authoring and formatting
+- **Rich Text Editor**: Advanced WYSIWYG editor with collaborative editing
+- **Template System**: Pre-built content templates for consistent formatting
+
+### Analytics & Insights
+- **Google Analytics Integration**: Comprehensive traffic and engagement analytics
+- **User Behavior Tracking**: Heat maps and user journey analysis
+- **Content Performance Metrics**: Advanced analytics for content optimization
+
+### Enhanced Features
+- **Multi-language Support**: Internationalization with automatic translation
+- **Advanced Search**: Elasticsearch integration with semantic search
+- **Social Media Integration**: Auto-posting to social platforms
+- **Mobile App**: React Native companion app
+- **AI-Powered Features**: Content recommendations and auto-tagging
+
+### Enterprise Features
+- **Team Collaboration**: Multi-user editing and approval workflows
+- **Advanced Permissions**: Role-based access control
+- **White-label Solutions**: Customizable branding and themes
+- **API Marketplace**: Third-party integrations and plugins
+
+## Contributing
+
+We welcome contributions! Please see our contributing guidelines:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Guidelines
+
+- Follow the existing code style and patterns
+- Add tests for new features
+- Update documentation as needed
+- Ensure all tests pass before submitting
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+For support and questions:
+
+- **Issues**: GitHub Issues for bug reports and feature requests
+- **Discussions**: GitHub Discussions for community support
+- **Email**: Contact the development team at suvodutta.isme@gmail.com
+
+## Acknowledgments
+
+- Built with [Next.js](https://nextjs.org/) and [React](https://reactjs.org/)
+- Database powered by [PostgreSQL](https://postgresql.org/) and [Prisma](https://prisma.io/)
+- UI components styled with [Tailwind CSS](https://tailwindcss.com/)
+- Icons provided by [Lucide React](https://lucide.dev/)
+- File storage by [AWS S3](https://aws.amazon.com/s3/)
+
 ---
 
-## 🐛 Common Issues
-
-* **Prisma KnownRequestError**: Usually means missing DB fields or schema drift — check `prisma.schema` and rerun migrations.
-* **Missing uploads in S3**: Make sure `coverKey` and `pdfKey` are saved correctly in metadata.
-
----
-
-## 📌 Planned Enhancements
-
-* ✏️ Local Writing Mode for Blogs (in addition to uploads)
-* 🎨 Full Canva-based template creation workflow
-* 🔔 Real-time notifications for new uploads
-* 📬 Email newsletter and community features
-* 📊 Google Analytics & dashboard widgets
-
----
-
-## 📖 Blog Post
-
-> Learn more about the making of Digital Dossier in the full story:
-> ["How Vibe Coding with Generative AI Accelerated My Blog Development"](https://digitaldossier.com/blog/vibe-coding-ai)
-
----
-
-## 📂 License
-
-MIT License. See [LICENSE](LICENSE) file.
-
----
-
-## 🙌 Credits
-
-* [Next.js](https://nextjs.org/)
-* [Tailwind CSS](https://tailwindcss.com/)
-* [Prisma](https://www.prisma.io/)
-* [AWS S3](https://aws.amazon.com/s3/)
-* Lucide Icons, Canva SDK (planned)
-
----
-
-## 💡 Contributing
-
-Got a cool idea or found a bug?
-Feel free to open issues or pull requests — contributions are welcome!
-
----
-
-## 🔗 Contact
-
-Built with ❤️ by [Suvojit Dutta](https://www.linkedin.com/in/suvojit-dutta/)
-
-
+**Digital Dossier** - Empowering content creators with modern web technology.
