@@ -60,12 +60,12 @@ export default async function handler(req, res) {
         create: {
           email: credEmail,
           name: credUsername, // usernames can duplicate in blog
-          // Optional: credentialUserId: payload.user_id
+          credentialUserId: payload.user_id, // Store the UUID from credential system
         },
         update: {
           // keep username aligned with credential
           name: credUsername,
-          // credentialUserId: payload.user_id
+          credentialUserId: payload.user_id, // Update the UUID mapping
         },
       });
     } catch (linkErr) {

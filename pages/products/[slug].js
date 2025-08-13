@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { prisma } from '@/lib/prisma';
 import { useState } from 'react';
 import FullScreenPDFViewer from '@/components/FullScreenPDFViewer';
+import VotingWidget from '@/components/VotingWidget';
+import CommentsSection from '@/components/CommentsSection';
 
 export async function getStaticPaths() {
   const products = await prisma.product.findMany({ select: { slug: true } });
@@ -42,6 +44,10 @@ export async function getStaticProps({ params }) {
     genre: productRaw.genre?.name || null,
     coverUrl,
     pdfUrl,
+    // Include voting and comment data
+    netScore: productRaw.netScore || 0,
+    totalVotes: productRaw.totalVotes || 0,
+    commentCount: productRaw.commentCount || 0,
   };
 
   return {
@@ -52,6 +58,7 @@ export async function getStaticProps({ params }) {
 
 export default function ProductDetail({ product }) {
   const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
+  const handleClosePdf = () => setPdfViewerOpen(false);
 
   const canonicalUrl = `https://yourdomain.com/products/${product.slug}`;
   const description = product.summary || product.content?.slice(0, 155) || '';
@@ -146,7 +153,31 @@ export default function ProductDetail({ product }) {
           </article>
         )}
 
-        <FullScreenPDFViewer isOpen={pdfViewerOpen} pdfUrl={product.pdfUrl} />
+        {/* Voting Widget */}
+        <div className="border-t border-gray-700 pt-6 mb-8">
+          <VotingWidget
+            contentType="product"
+            contentId={product.id}
+            initialNetScore={product.netScore}
+            initialTotalVotes={product.totalVotes}
+            className="flex justify-center"
+          />
+        </div>
+
+        {/* Comments Section */}
+        <div className="border-t border-gray-700 pt-8">
+          <CommentsSection
+            contentType="product"
+            contentId={product.id}
+            initialCount={product.commentCount}
+          />
+        </div>
+
+        <FullScreenPDFViewer 
+          isOpen={pdfViewerOpen} 
+          pdfUrl={product.pdfUrl} 
+          onClose={handleClosePdf}
+        />
       </div>
     </>
   );

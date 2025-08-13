@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import CreatableSelect from 'react-select/creatable';
+import GenreSelector from './GenreSelector';
 
 export default function UploadModal({ isOpen, onClose, onSave, initialData = {} }) {
   const data = initialData ?? {};
@@ -13,32 +13,20 @@ export default function UploadModal({ isOpen, onClose, onSave, initialData = {} 
   const [coverImage, setCoverImage] = useState(null);
   const [pdfFile, setPdfFile] = useState(null);
 
-  const [genres, setGenres] = useState([]);
-  const [options, setOptions] = useState([]);
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
 
-  // Fetch available genres when modal opens
+  // Initialize genre selection for edit mode
   useEffect(() => {
-    if (!isOpen) return;
-    fetch('/api/genres')
-      .then(res => res.json())
-      .then(data => {
-        setGenres(data);
-        setOptions(data.map(g => ({ value: g.id, label: g.name })));
-
-        // Pre-select existing genre by ID if editing
-        if (isEditMode && initialData.genreId) {
-          const match = data.find(g => g.id === initialData.genreId);
-          if (match) {
-            setSelectedGenre({ value: match.id, label: match.name });
-          }
-        }
-      })
-      .catch(err => console.error('Error loading genres', err));
-  }, [isOpen, initialData.genreId, isEditMode]);
+    if (isEditMode && initialData.genreId && initialData.genre) {
+      setSelectedGenre({
+        value: initialData.genreId,
+        label: initialData.genre,
+        name: initialData.genre
+      });
+    }
+  }, [isEditMode, initialData.genreId, initialData.genre]);
 
   // Reset form on open
   useEffect(() => {
@@ -60,39 +48,6 @@ export default function UploadModal({ isOpen, onClose, onSave, initialData = {} 
 
   if (!isOpen) return null;
 
-  const handleCreateOption = async (inputValue) => {
-    try {
-      const res = await fetch('/api/genres', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: inputValue }),
-      });
-      if (!res.ok) throw new Error('Failed to create genre');
-      const newGenre = await res.json();
-      const newOption = { value: newGenre.id, label: newGenre.name };
-      setGenres(prev => [...prev, newGenre]);
-      setOptions(prev => [...prev, newOption]);
-      setSelectedGenre(newOption);
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
-  const handleDeleteGenre = async (id) => {
-    if (!confirm('Are you sure you want to delete this genre?')) return;
-    try {
-      const res = await fetch(`/api/genres/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete genre');
-      setGenres(prev => prev.filter(g => g.id !== id));
-      setOptions(prev => prev.filter(o => o.value !== id));
-      if (selectedGenre?.value === id) {
-        setSelectedGenre(null);
-      }
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
   const handleCoverImageChange = (e) => {
     const file = e.target.files?.[0];
     setCoverImage(file);
@@ -103,6 +58,18 @@ export default function UploadModal({ isOpen, onClose, onSave, initialData = {} 
     const file = e.target.files?.[0];
     setPdfFile(file);
     if (file) setFieldErrors(prev => ({ ...prev, pdfFile: '' }));
+  };
+
+  const handleGenreChange = (selectedOption) => {
+    setSelectedGenre(selectedOption);
+    // Clear genre error when a valid selection is made
+    if (selectedOption && fieldErrors.genre) {
+      setFieldErrors(prev => ({ ...prev, genre: '' }));
+    }
+  };
+
+  const clearGenreError = () => {
+    setFieldErrors(prev => ({ ...prev, genre: '' }));
   };
 
   const handleSave = async () => {
@@ -211,63 +178,15 @@ export default function UploadModal({ isOpen, onClose, onSave, initialData = {} 
           />
         </div>
 
-        {/* Genre */}
+        {/* Enhanced Genre Selector */}
         <div className="mb-4">
-          <label className="block mb-1">Genre*</label>
-          <CreatableSelect
-            options={options}
+          <GenreSelector
             value={selectedGenre}
-            onChange={opt => setSelectedGenre(opt)}
-            onCreateOption={handleCreateOption}
-            className="w-full"
-            classNamePrefix="react-select"
-            components={{
-              IndicatorSeparator: () => null,
-              ClearIndicator: () => null
-            }}
-            styles={{
-              control: base => ({
-                ...base,
-                backgroundColor: '#374151',
-                border: 'none',
-                boxShadow: 'none',
-                '&:hover': { border: 'none' },
-                borderRadius: base.borderRadius,
-                padding: '0.5rem'
-              }),
-              singleValue: base => ({ ...base, color: 'white' }),
-              placeholder: base => ({ ...base, color: 'white' }),
-              menu: base => ({ ...base, backgroundColor: '#374151' }),
-              option: (base, { isFocused }) => ({
-                ...base,
-                backgroundColor: isFocused ? '#4B5563' : '#374151',
-                color: 'white'
-              }),
-              dropdownIndicator: base => ({ ...base, color: 'white' })
-            }}
+            onChange={handleGenreChange}
+            error={fieldErrors.genre}
+            onClearError={clearGenreError}
+            required={true}
           />
-          {fieldErrors.genre && (
-            <p className="mt-1 text-red-400 text-sm">{fieldErrors.genre}</p>
-          )}
-
-          {/* Inline list for deletions */}
-          <ul className="mt-2 space-y-1">
-            {options.map(opt => (
-              <li
-                key={opt.value}
-                className="flex justify-between items-center bg-gray-700 px-2 py-1 rounded group"
-              >
-                <span>{opt.label}</span>
-                <button
-                  onClick={() => handleDeleteGenre(opt.value)}
-                  className="opacity-0 group-hover:opacity-100 text-red-500"
-                  aria-label="Delete genre"
-                >
-                  ×
-                </button>
-              </li>
-            ))}
-          </ul>
         </div>
 
         {/* Content */}

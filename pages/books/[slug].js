@@ -5,6 +5,8 @@ import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import { useState } from 'react'
 import FullScreenPDFViewer from '@/components/FullScreenPDFViewer'
+import VotingWidget from '@/components/VotingWidget'
+import CommentsSection from '@/components/CommentsSection'
 
 export async function getStaticPaths() {
   const books = await prisma.book.findMany({ select: { slug: true } })
@@ -48,6 +50,10 @@ export async function getStaticProps({ params }) {
     updatedAt: bookRaw.updatedAt.toISOString(),
     coverUrl,
     pdfUrl,
+    // Include voting and comment data
+    netScore: bookRaw.netScore || 0,
+    totalVotes: bookRaw.totalVotes || 0,
+    commentCount: bookRaw.commentCount || 0,
   }
 
   return {
@@ -60,6 +66,7 @@ export async function getStaticProps({ params }) {
 
 export default function BookDetail({ book }) {
   const [pdfViewerOpen, setPdfViewerOpen] = useState(false)
+  const handleClosePdf = () => setPdfViewerOpen(false)
   const canonicalUrl = `https://yourdomain.com/books/${book.slug}` // replace with your domain
   const description = book.summary || book.content.slice(0, 155)
 
@@ -160,7 +167,31 @@ export default function BookDetail({ book }) {
           ))}
         </article>
 
-        <FullScreenPDFViewer isOpen={pdfViewerOpen} pdfUrl={book.pdfUrl} />
+        {/* Voting Widget */}
+        <div className="border-t border-gray-700 pt-6 mb-8">
+          <VotingWidget
+            contentType="book"
+            contentId={book.id}
+            initialNetScore={book.netScore}
+            initialTotalVotes={book.totalVotes}
+            className="flex justify-center"
+          />
+        </div>
+
+        {/* Comments Section */}
+        <div className="border-t border-gray-700 pt-8">
+          <CommentsSection
+            contentType="book"
+            contentId={book.id}
+            initialCount={book.commentCount}
+          />
+        </div>
+
+        <FullScreenPDFViewer 
+          isOpen={pdfViewerOpen} 
+          pdfUrl={book.pdfUrl} 
+          onClose={handleClosePdf}
+        />
       </div>
     </>
   )

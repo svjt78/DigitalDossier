@@ -1,0 +1,201 @@
+// pages/api/comments/[commentId].js
+// Individual comment operations: edit, delete
+
+import { prisma } from '@/lib/prisma';
+import { isAuthenticated, getUserFromToken } from '@/lib/auth-utils';
+
+export default async function handler(req, res) {
+  const { commentId } = req.query;
+  
+  const commentIdNum = parseInt(commentId);
+  if (isNaN(commentIdNum)) {
+    return res.status(400).json({ error: 'Comment ID must be a number' });
+  }
+
+  // All operations require authentication
+  if (!isAuthenticated(req)) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  const user = getUserFromToken(req);
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid authentication token' });
+  }
+
+  try {
+    switch (req.method) {
+      case 'GET':
+        return await handleGetComment(req, res, commentIdNum);
+      case 'PUT':
+        return await handleUpdateComment(req, res, commentIdNum, user);
+      case 'DELETE':
+        return await handleDeleteComment(req, res, commentIdNum, user);
+      default:
+        res.setHeader('Allow', ['GET', 'PUT', 'DELETE']);
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+  } catch (error) {
+    console.error('Comment API error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+// GET /api/comments/[commentId] - Get individual comment
+async function handleGetComment(req, res, commentId) {
+  const comment = await prisma.comment.findUnique({
+    where: { id: commentId },
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          email: true
+        }
+      }
+    }
+  });
+
+  if (!comment || comment.isDeleted) {
+    return res.status(404).json({ error: 'Comment not found' });
+  }
+
+  return res.status(200).json(comment);
+}
+
+// PUT /api/comments/[commentId] - Update comment (author only)
+async function handleUpdateComment(req, res, commentId, user) {
+  const { content } = req.body;
+  
+  if (!content || typeof content !== 'string' || content.trim().length === 0) {
+    return res.status(400).json({ error: 'Comment content is required' });
+  }
+
+  if (content.trim().length > 2000) {
+    return res.status(400).json({ error: 'Comment too long (max 2000 characters)' });
+  }
+
+  // Check if comment exists and user is the author
+  const existingComment = await prisma.comment.findUnique({
+    where: { id: commentId },
+    select: { id: true, authorId: true, isDeleted: true }
+  });
+
+  if (!existingComment || existingComment.isDeleted) {
+    return res.status(404).json({ error: 'Comment not found' });
+  }
+
+  if (existingComment.authorId !== parseInt(user.id)) {
+    return res.status(403).json({ error: 'You can only edit your own comments' });
+  }
+
+  // Update the comment
+  const updatedComment = await prisma.comment.update({
+    where: { id: commentId },
+    data: {
+      content: content.trim(),
+      isEdited: true,
+      updatedAt: new Date()
+    },
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          email: true
+        }
+      }
+    }
+  });
+
+  return res.status(200).json(updatedComment);
+}
+
+// DELETE /api/comments/[commentId] - Soft delete comment (author only)
+async function handleDeleteComment(req, res, commentId, user) {
+  // Check if comment exists and user is the author
+  const existingComment = await prisma.comment.findUnique({
+    where: { id: commentId },
+    select: { 
+      id: true, 
+      authorId: true, 
+      isDeleted: true,
+      contentType: true,
+      contentId: true,
+      parentId: true
+    }
+  });
+
+  if (!existingComment || existingComment.isDeleted) {
+    return res.status(404).json({ error: 'Comment not found' });
+  }
+
+  if (existingComment.authorId !== parseInt(user.id)) {
+    return res.status(403).json({ error: 'You can only delete your own comments' });
+  }
+
+  // Check if comment has replies
+  const hasReplies = await prisma.comment.count({
+    where: {
+      parentId: commentId,
+      isDeleted: false
+    }
+  });
+
+  // Use transaction to ensure consistency
+  await prisma.$transaction(async (tx) => {
+    if (hasReplies > 0) {
+      // Soft delete if has replies (preserve thread structure)
+      await tx.comment.update({
+        where: { id: commentId },
+        data: {
+          content: '[Comment deleted]',
+          isDeleted: true,
+          updatedAt: new Date()
+        }
+      });
+    } else {
+      // Hard delete if no replies
+      await tx.comment.delete({
+        where: { id: commentId }
+      });
+    }
+
+    // Update comment count in content table
+    await updateContentCommentCount(
+      tx, 
+      existingComment.contentType, 
+      existingComment.contentId
+    );
+  });
+
+  return res.status(200).json({ 
+    message: 'Comment deleted successfully',
+    deletedCommentId: commentId
+  });
+}
+
+// Helper function to update content comment count
+async function updateContentCommentCount(tx, contentType, contentId) {
+  const count = await tx.comment.count({
+    where: {
+      contentType,
+      contentId,
+      isDeleted: false
+    }
+  });
+
+  const modelMap = {
+    blog: 'blog',
+    book: 'book',
+    product: 'product'
+  };
+
+  const model = modelMap[contentType];
+  
+  await tx[model].update({
+    where: { id: contentId },
+    data: {
+      commentCount: count
+    }
+  });
+}

@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useRouter } from 'next/router';
 import { X, Download, Printer } from 'lucide-react';
 
-export default function FullScreenPDFViewer({ isOpen, pdfUrl }) {
+export default function FullScreenPDFViewer({ isOpen, pdfUrl, onClose }) {
   const iframeRef = useRef(null);
   const router = useRouter();
 
@@ -11,7 +11,12 @@ export default function FullScreenPDFViewer({ isOpen, pdfUrl }) {
   const handleDownload = () => {
     // open in new tab so user can save
     window.open(pdfUrl, '_blank');
-    router.back();
+    // Use onClose if provided, fallback to router.back() for backward compatibility
+    if (onClose) {
+      onClose();
+    } else {
+      router.back();
+    }
   };
 
   const handlePrint = () => {
@@ -20,11 +25,21 @@ export default function FullScreenPDFViewer({ isOpen, pdfUrl }) {
       win.focus();
       win.print();
     }
-    router.back();
+    // Use onClose if provided, fallback to router.back() for backward compatibility
+    if (onClose) {
+      onClose();
+    } else {
+      router.back();
+    }
   };
 
   const handleClose = () => {
-    router.back();
+    // Use onClose if provided, fallback to router.back() for backward compatibility
+    if (onClose) {
+      onClose();
+    } else {
+      router.back();
+    }
   };
 
   return (

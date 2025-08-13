@@ -18,55 +18,73 @@ model Genre {
 }
 
 model Blog {
-  id        Int       @id @default(autoincrement())
-  title     String
-  slug      String    @unique
-  author    String
-  genreId   Int?      @map("genre_id")
-  genre     Genre?    @relation("BlogGenre", fields: [genreId], references: [id])
-  summary   String?
-  content   String
-  coverKey  String?   @map("cover_key")
-  pdfKey    String?   @map("pdf_key")
-  tags      BlogTag[]
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt           @map("updated_at")
+  id           Int       @id @default(autoincrement())
+  title        String
+  slug         String    @unique
+  author       String
+  genreId      Int?      @map("genre_id")
+  genre        Genre?    @relation("BlogGenre", fields: [genreId], references: [id])
+  summary      String?
+  content      String
+  coverKey     String?   @map("cover_key")
+  pdfKey       String?   @map("pdf_key")
+  tags         BlogTag[]
+  
+  // New voting and comment aggregation fields
+  netScore     Int       @default(0) @map("net_score")
+  totalVotes   Int       @default(0) @map("total_votes")
+  commentCount Int       @default(0) @map("comment_count")
+  
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   @@map("blog")
 }
 
 model Book {
-  id        Int       @id @default(autoincrement())
-  title     String
-  slug      String    @unique
-  author    String
-  genreId   Int?      @map("genre_id")
-  genre     Genre?    @relation("BookGenre", fields: [genreId], references: [id])
-  summary   String
-  content   String
-  coverKey  String?   @map("cover_key")
-  pdfKey    String?   @map("pdf_key")
-  tags      BookTag[]
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt           @map("updated_at")
+  id           Int       @id @default(autoincrement())
+  title        String
+  slug         String    @unique
+  author       String
+  genreId      Int?      @map("genre_id")
+  genre        Genre?    @relation("BookGenre", fields: [genreId], references: [id])
+  summary      String
+  content      String
+  coverKey     String?   @map("cover_key")
+  pdfKey       String?   @map("pdf_key")
+  tags         BookTag[]
+  
+  // New voting and comment aggregation fields
+  netScore     Int       @default(0) @map("net_score")
+  totalVotes   Int       @default(0) @map("total_votes")
+  commentCount Int       @default(0) @map("comment_count")
+  
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   @@map("book")
 }
 
 model Product {
-  id        Int          @id @default(autoincrement())
-  title     String
-  slug      String       @unique
-  author    String
-  genreId   Int?         @map("genre_id")
-  genre     Genre?       @relation("ProductGenre", fields: [genreId], references: [id])
-  summary   String
-  content   String
-  coverKey  String?      @map("cover_key")
-  pdfKey    String?      @map("pdf_key")
-  tags      ProductTag[]
-  createdAt DateTime     @default(now()) @map("created_at")
-  updatedAt DateTime     @updatedAt           @map("updated_at")
+  id           Int          @id @default(autoincrement())
+  title        String
+  slug         String       @unique
+  author       String
+  genreId      Int?         @map("genre_id")
+  genre        Genre?       @relation("ProductGenre", fields: [genreId], references: [id])
+  summary      String
+  content      String
+  coverKey     String?      @map("cover_key")
+  pdfKey       String?      @map("pdf_key")
+  tags         ProductTag[]
+  
+  // New voting and comment aggregation fields
+  netScore     Int          @default(0) @map("net_score")
+  totalVotes   Int          @default(0) @map("total_votes")
+  commentCount Int          @default(0) @map("comment_count")
+  
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
 
   @@map("product")
 }
@@ -115,7 +133,7 @@ model Profile {
   id         Int      @id @default(autoincrement())
   avatarKey  String?  @map("avatar_key")
   createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt           @map("updated_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@map("profile")
 }
@@ -129,12 +147,67 @@ model Subscriber {
 }
 
 model User {
-  id                Int      @id @default(autoincrement())
-  email             String   @unique
-  name              String?  // usernames can repeat and may be null
-  credentialUserId  String?  @map("credential_user_id") // optional, for observability
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt      @map("updated_at")
+  id                Int       @id @default(autoincrement())
+  email             String    @unique
+  name              String?   // usernames can repeat and may be null
+  credentialUserId  String?   @map("credential_user_id") // optional, for observability
+  
+  // New relationships
+  comments          Comment[]
+  votes             Vote[]
+  
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
 
   @@map("user")
+}
+
+// New Comment model with threading support
+model Comment {
+  id          Int       @id @default(autoincrement())
+  content     String
+  authorId    Int       @map("author_id")
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  // Polymorphic content reference
+  contentType String    @map("content_type") // 'blog', 'book', 'product'
+  contentId   Int       @map("content_id")
+  
+  // Threading support - unlimited depth
+  parentId    Int?      @map("parent_id")
+  parent      Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     Comment[] @relation("CommentReplies")
+  
+  // Metadata
+  isEdited    Boolean   @default(false) @map("is_edited")
+  isDeleted   Boolean   @default(false) @map("is_deleted")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([contentType, contentId])
+  @@index([contentType, contentId, isDeleted]) // Performance index for counting
+  @@index([parentId])
+  @@index([authorId])
+  @@map("comment")
+}
+
+// New Vote model for thumbs up/down
+model Vote {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Polymorphic content reference
+  contentType String    @map("content_type") // 'blog', 'book', 'product'
+  contentId   Int       @map("content_id")
+  
+  voteType    String    @map("vote_type") // 'up' or 'down'
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([userId, contentType, contentId]) // One vote per user per content
+  @@index([contentType, contentId])
+  @@index([contentType, contentId, voteType]) // Performance index for aggregations
+  @@index([userId])
+  @@map("vote")
 }

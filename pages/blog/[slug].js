@@ -3,6 +3,8 @@ import Image from 'next/image';
 import { prisma } from '@/lib/prisma';
 import { useState } from 'react';
 import FullScreenPDFViewer from '@/components/FullScreenPDFViewer';
+import VotingWidget from '@/components/VotingWidget';
+import CommentsSection from '@/components/CommentsSection';
 
 export async function getStaticPaths() {
   const blogs = await prisma.blog.findMany({ select: { slug: true } });
@@ -56,6 +58,10 @@ export async function getStaticProps({ params }) {
         content: blogRaw.content,
         coverUrl,
         pdfUrl,
+        // Include voting and comment data
+        netScore: blogRaw.netScore || 0,
+        totalVotes: blogRaw.totalVotes || 0,
+        commentCount: blogRaw.commentCount || 0,
         createdAt: blogRaw.createdAt.toISOString(),
         updatedAt: blogRaw.updatedAt.toISOString(),
       },
@@ -67,6 +73,7 @@ export async function getStaticProps({ params }) {
 export default function BlogDetail({ blog }) {
   const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
   const handleOpenPdf = () => setPdfViewerOpen(true);
+  const handleClosePdf = () => setPdfViewerOpen(false);
 
   const canonicalUrl = `https://yourdomain.com/blog/${blog.slug}`;
   const description = blog.summary || blog.content.slice(0, 155);
@@ -149,7 +156,31 @@ export default function BlogDetail({ blog }) {
           <p>{blog.content}</p>
         </article>
 
-        <FullScreenPDFViewer isOpen={pdfViewerOpen} pdfUrl={blog.pdfUrl} />
+        {/* Voting Widget */}
+        <div className="border-t border-gray-700 pt-6 mb-8">
+          <VotingWidget
+            contentType="blog"
+            contentId={blog.id}
+            initialNetScore={blog.netScore}
+            initialTotalVotes={blog.totalVotes}
+            className="flex justify-center"
+          />
+        </div>
+
+        {/* Comments Section */}
+        <div className="border-t border-gray-700 pt-8">
+          <CommentsSection
+            contentType="blog"
+            contentId={blog.id}
+            initialCount={blog.commentCount}
+          />
+        </div>
+
+        <FullScreenPDFViewer 
+          isOpen={pdfViewerOpen} 
+          pdfUrl={blog.pdfUrl} 
+          onClose={handleClosePdf}
+        />
       </div>
     </>
   );
