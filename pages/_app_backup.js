@@ -1,17 +1,19 @@
-// File: pages/_app.js
-
+// pages/_app.js
 import '../styles/globals.css';
 import Head from 'next/head';
 import Layout from '@/components/Layout';
 import { SearchProvider } from '@/components/SearchContext';
-import { AuthProvider } from '@/contexts/AuthContext';
-import SessionExpiredBanner from '@/components/SessionExpiredBanner';
-import SessionWarningBanner from '@/components/SessionWarningBanner';
 
 export default function App({ Component, pageProps }) {
   return (
     <>
       <Head>
+        {/* React-Select default styles via CDN */}
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/react-select@latest/dist/react-select.css"
+        />
+
         {/* Basic Meta */}
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -38,15 +40,11 @@ export default function App({ Component, pageProps }) {
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
 
-      <AuthProvider>
-        <SessionWarningBanner />
-        <SessionExpiredBanner />
-        <SearchProvider>
-          <Layout>
-            <Component {...pageProps} />
-          </Layout>
-        </SearchProvider>
-      </AuthProvider>
+      <SearchProvider>
+        <Layout>
+          <Component {...pageProps} />
+        </Layout>
+      </SearchProvider>
     </>
   );
 }

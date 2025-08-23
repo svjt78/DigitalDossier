@@ -1,5 +1,5 @@
 // components/CommentForm.js
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '@/contexts/AuthContext';
 import { getAuthHeaders } from '@/lib/auth-utils';
 import { Send, X } from 'lucide-react';
@@ -16,16 +16,27 @@ export default function CommentForm({
   initialContent = '',
   editCommentId = null
 }) {
-  const { isAuthenticated, username } = useContext(AuthContext);
+  const { isAuthenticated, username, sessionExpired } = useContext(AuthContext);
   const [content, setContent] = useState(initialContent);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // Handle session expiration
+  useEffect(() => {
+    if (sessionExpired) {
+      setError('Session expired. Please sign in to continue commenting.');
+    }
+  }, [sessionExpired]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!isAuthenticated) {
-      setError('Please sign in to comment');
+      if (sessionExpired) {
+        setError('Session expired. Please sign in again.');
+      } else {
+        setError('Please sign in to comment');
+      }
       return;
     }
 

@@ -2,9 +2,10 @@
 
 import { IncomingForm } from "formidable";
 import fs from "fs";
+import path from "path";
 import sharp from "sharp";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { prisma } from "@/lib/prisma";
+import { getUserFromToken, isSuperUser as serverIsSuperUser } from "@/lib/auth-utils";
 
 export const config = {
   api: {
@@ -12,22 +13,44 @@ export const config = {
   },
 };
 
-// Initialize AWS S3 client
-const s3 = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
+const ADMIN_EMAIL = 'suvodutta.isme@gmail.com';
+
+/**
+ * Validate if the request is from an authenticated admin user
+ */
+async function validateAdminAccess(req) {
+  // Check if user is authenticated
+  const user = await getUserFromToken(req);
+  if (!user) {
+    return { isValid: false, error: 'Authentication required' };
+  }
+
+  // Check if user email matches admin email
+  if (user.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    console.warn(`🚫 Unauthorized avatar upload attempt from: ${user.email}`);
+    return { isValid: false, error: 'Admin access required' };
+  }
+
+  console.log(`✅ Admin access validated for: ${user.email}`);
+  return { isValid: true, user };
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 
-  // 1) Parse the incoming multipart form
+  // 1) Validate admin access first
+  const validation = await validateAdminAccess(req);
+  if (!validation.isValid) {
+    return res.status(403).json({ 
+      error: 'Forbidden', 
+      message: 'Only the administrator can update the site avatar'
+    });
+  }
+
+  // 2) Parse the incoming multipart form
   const form = new IncomingForm();
   form.keepExtensions = true;
 
@@ -48,7 +71,25 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "No avatar file uploaded" });
   }
 
-  // 2) Read + resize the image to 256×256 px PNG
+  // 3) Validate file type
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  if (!allowedTypes.includes(file.mimetype)) {
+    return res.status(400).json({ 
+      error: "Invalid file type", 
+      message: "Only JPEG, PNG, GIF, and WebP images are allowed" 
+    });
+  }
+
+  // 4) Validate file size (max 5MB)
+  const maxSize = 5 * 1024 * 1024; // 5MB
+  if (file.size > maxSize) {
+    return res.status(400).json({ 
+      error: "File too large", 
+      message: "Avatar must be smaller than 5MB" 
+    });
+  }
+
+  // 5) Read + resize the image to 256×256 px PNG
   let resizedBuffer;
   try {
     const buffer = await fs.promises.readFile(file.filepath);
@@ -58,50 +99,59 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Error processing image" });
   }
 
-  // 3) Upload the resized image to S3 under the avatars prefix
-  const bucket = process.env.AWS_S3_BUCKET;
-  const prefix = process.env.S3_AVATARS_PREFIX; // e.g. "avatars"
-  const key = `${prefix}/user-avatar.png`;
+  // 6) Save the resized image to local public/uploads directory
+  const uploadsDir = path.join(process.cwd(), "public", "uploads");
+  const avatarPath = path.join(uploadsDir, "site-avatar.png");
 
   try {
-    await s3.send(
-      new PutObjectCommand({
-        Bucket: bucket,
-        Key: key,
-        Body: resizedBuffer,
-        ContentType: "image/png",
-      })
-    );
-  } catch (uploadErr) {
-    console.error("Error uploading to S3:", uploadErr);
-    return res.status(500).json({ error: "Error uploading avatar" });
+    // Ensure uploads directory exists
+    await fs.promises.mkdir(uploadsDir, { recursive: true });
+    
+    // Write the resized image
+    await fs.promises.writeFile(avatarPath, resizedBuffer);
+    console.log(`✅ Avatar saved to: ${avatarPath}`);
+  } catch (saveErr) {
+    console.error("Error saving avatar locally:", saveErr);
+    return res.status(500).json({ error: "Error saving avatar" });
   }
 
-  // 4) Persist the S3 key in the Profile table (upsert single profile record)
+  // 7) Update the Profile table with local path
+  const avatarUrl = "/uploads/site-avatar.png";
+  
   let profile;
   try {
     profile = await prisma.profile.upsert({
       where: { id: 1 },
-      update: { avatarKey: key },
-      create: { avatarKey: key },
+      update: { avatarKey: avatarUrl },
+      create: { avatarKey: avatarUrl },
     });
+    console.log(`✅ Profile updated in database with avatar: ${avatarUrl}`);
   } catch (dbErr) {
     console.error("Error saving avatarKey to DB:", dbErr);
     return res.status(500).json({ error: "Error saving profile data" });
   }
 
-  // 5) Construct the public URL and return it along with DB record
-  const region = process.env.AWS_REGION;
-  const url = `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
+  // 8) Clean up temporary file
+  try {
+    await fs.promises.unlink(file.filepath);
+  } catch (cleanupErr) {
+    console.warn("Could not clean up temp file:", cleanupErr);
+  }
 
+  // 9) Log successful admin upload
+  console.log(`🎉 Avatar successfully uploaded by admin: ${validation.user.email}`);
+
+  // 10) Return success response with local URL
   return res.status(200).json({
     success: true,
+    message: "Avatar updated successfully",
     data: {
       id:         profile.id,
       avatarKey:  profile.avatarKey,
-      avatarUrl:  url,
+      avatarUrl:  avatarUrl,
       createdAt:  profile.createdAt,
       updatedAt:  profile.updatedAt,
+      uploadedBy: validation.user.email
     }
   });
 }

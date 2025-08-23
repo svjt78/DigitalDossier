@@ -13,7 +13,7 @@ export default function VotingWidget({
   initialTotalVotes = 0,
   className = '' 
 }) {
-  const { isAuthenticated, userId } = useContext(AuthContext);
+  const { isAuthenticated, userId, sessionExpired } = useContext(AuthContext);
   
   // Separate server state from optimistic state
   const [serverVotes, setServerVotes] = useState({
@@ -31,6 +31,14 @@ export default function VotingWidget({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [syncError, setSyncError] = useState(false);
+
+  // Handle session expiration
+  useEffect(() => {
+    if (sessionExpired && error !== 'Session expired. Please sign in again.') {
+      setError('Session expired. Please sign in again.');
+      setOptimisticVotes(null); // Clear any pending updates
+    }
+  }, [sessionExpired, error]);
 
   // Current displayed votes (optimistic if available, otherwise server state)
   const displayVotes = optimisticVotes || serverVotes;
@@ -106,8 +114,13 @@ export default function VotingWidget({
   };
 
   const handleVote = async (voteType) => {
+    // Check authentication with session expiration awareness
     if (!isAuthenticated) {
-      setError('Please sign in to vote');
+      if (sessionExpired) {
+        setError('Session expired. Please sign in again.');
+      } else {
+        setError('Please sign in to vote');
+      }
       return;
     }
 
@@ -236,10 +249,21 @@ export default function VotingWidget({
         </div>
       </div>
 
-      {/* Status messages */}
+      {/* Enhanced status messages */}
       {error && (
-        <div className="text-red-400 text-sm">
-          {error}
+        <div className={`text-sm ${
+          sessionExpired ? 'text-amber-400' : 'text-red-400'
+        }`}>
+          {sessionExpired ? (
+            <div className="flex items-center space-x-2">
+              <span>Session expired.</span>
+              <a href="/login" className="text-blue-400 hover:text-blue-300 underline">
+                Sign in again
+              </a>
+            </div>
+          ) : (
+            error
+          )}
         </div>
       )}
 
@@ -250,7 +274,7 @@ export default function VotingWidget({
       )}
 
       {/* Sign in prompt */}
-      {!isAuthenticated && (
+      {!isAuthenticated && !sessionExpired && (
         <div className="text-gray-500 text-sm">
           <a href="/login" className="text-blue-400 hover:text-blue-300 underline">
             Sign in

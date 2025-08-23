@@ -6,7 +6,7 @@ import CommentForm from './CommentForm';
 import CommentThread from './CommentThread';
 
 export default function CommentsSection({ contentType, contentId, initialCount = 0 }) {
-  const { isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated, sessionExpired } = useContext(AuthContext);
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -15,6 +15,13 @@ export default function CommentsSection({ contentType, contentId, initialCount =
   useEffect(() => {
     fetchComments();
   }, [contentType, contentId]);
+
+  // Handle session expiration
+  useEffect(() => {
+    if (sessionExpired) {
+      setError('Session expired. Please sign in to continue commenting.');
+    }
+  }, [sessionExpired]);
 
   const fetchComments = async () => {
     setLoading(true);
@@ -56,6 +63,19 @@ export default function CommentsSection({ contentType, contentId, initialCount =
   const handleDeleteComment = (commentId) => {
     // Refresh comments to get updated tree structure
     fetchComments();
+  };
+
+  // Enhanced authentication check with session expiration awareness
+  const checkAuthenticationStatus = () => {
+    if (!isAuthenticated) {
+      if (sessionExpired) {
+        setError('Session expired. Please sign in to continue commenting.');
+      } else {
+        setError('Please sign in to comment.');
+      }
+      return false;
+    }
+    return true;
   };
 
   // Helper function to update comment tree with new reply

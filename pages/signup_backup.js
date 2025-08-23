@@ -241,7 +241,7 @@ export default function SignupPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-md hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 font-medium shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
               >
                 {loading ? 'Signing up…' : 'Sign Up'}
               </button>
@@ -254,28 +254,26 @@ export default function SignupPage() {
               </button>
             </div>
 
-            <div className="tooltip-container" data-tooltip="Coming soon! 🚀">
-              <button
-                type="button"
-                onClick={() => {}}
-                className="w-full py-2 border border-gray-300 rounded-md flex items-center justify-center space-x-2 hover:bg-gray-50 cursor-not-allowed opacity-75"
-              >
-                <Image
-                  src="/icons/google.svg"
-                  alt="Google logo"
-                  width={18}
-                  height={18}
-                />
-                <span className="text-gray-700">Sign up with Google</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => {}}
+              className="w-full py-2 border border-gray-300 rounded-md flex items-center justify-center space-x-2 hover:bg-gray-50"
+            >
+              <Image
+                src="/icons/google.svg"
+                alt="Google logo"
+                width={18}
+                height={18}
+              />
+              <span className="text-gray-700">Sign up with Google</span>
+            </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-600">
             Already have an account?{' '}
             <Link
               href="/login"
-              className="text-blue-500 hover:text-blue-400 hover:underline transition-colors duration-200"
+              className="text-primary-600 hover:underline"
             >
               Sign in
             </Link>

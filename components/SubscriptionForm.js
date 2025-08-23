@@ -24,12 +24,12 @@ export default function SubscriptionForm() {
         placeholder="you@example.com"
         value={email}
         onChange={e => setEmail(e.target.value)}
-        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none text-black"
+        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black transition-all duration-200"
       />
       <button
         type="submit"
         disabled={status === 'loading'}
-        className="w-full py-2 rounded-lg bg-orange-500 text-white font-medium hover:bg-orange-600 disabled:opacity-50"
+        className="w-full py-2 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-medium hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 transition-all duration-200 shadow-lg shadow-blue-500/25"
       >
         {status === 'loading' ? 'Saving…' : 'Subscribe'}
       </button>

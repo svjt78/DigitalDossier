@@ -40,11 +40,11 @@ export default function Layout({ children }) {
         />
       </Head>
 
-      <div className="min-h-screen flex flex-col md:flex-row bg-gray-800 text-white">
+      <div className="min-h-screen flex flex-col lg:flex-row bg-gray-800 text-white overflow-hidden">
         {/* Sidebar: hidden on mobile, slides in as drawer */}
         <Sidebar isOpen={sidebarOpen} onClose={toggleSidebar} />
 
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-0">
           {/* Header and Navbar container (non-scrollable) */}
           <div className="sticky top-0 z-50">
             <Header onHamburgerClick={toggleSidebar} />
@@ -52,7 +52,7 @@ export default function Layout({ children }) {
           </div>
 
           {/* Main content area scrolls */}
-          <main className="p-8 flex-1 overflow-auto" role="main">
+          <main className="p-4 sm:p-6 lg:p-8 flex-1 overflow-auto scrollbar-thin scrollbar-thumb-blue-500/30" role="main">
             {children}
           </main>
         </div>

@@ -15,10 +15,11 @@
   bottom: 125%;
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.8);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(99, 102, 241, 0.95));
+  backdrop-filter: blur(8px);
   color: white;
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 14px;
   white-space: nowrap;
   opacity: 0;
@@ -26,6 +27,8 @@
   transition: opacity 0.3s, visibility 0.3s;
   z-index: 1000;
   pointer-events: none;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
 }
 
 .tooltip-container::after {
@@ -35,7 +38,7 @@
   left: 50%;
   transform: translateX(-50%);
   border: 5px solid transparent;
-  border-top-color: rgba(0, 0, 0, 0.8);
+  border-top-color: rgba(59, 130, 246, 0.95);
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s, visibility 0.3s;
@@ -47,4 +50,159 @@
 .tooltip-container:hover::after {
   opacity: 1;
   visibility: visible;
+}
+
+/* Modern scrollbar styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(59 130 246 / 0.5) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgb(59 130 246 / 0.5), rgb(99 102 241 / 0.5));
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgb(59 130 246 / 0.7), rgb(99 102 241 / 0.7));
+}
+
+/* Enhanced focus states for accessibility */
+.focus-visible:focus-visible {
+  outline: 2px solid rgb(59 130 246);
+  outline-offset: 2px;
+}
+
+/* Smooth transitions for all interactive elements */
+button,
+a,
+input,
+textarea,
+select {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Glass morphism utility class */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Modern shadow utilities */
+.shadow-blue {
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.shadow-blue-lg {
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+}
+
+/* Gradient text utilities */
+.gradient-text-blue {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Enhanced button hover effects */
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+/* Advanced loading animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-4px) scale(1.02);
+}
+
+/* Staggered animations */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+
+/* Performance optimizations */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .touch-friendly {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .text-responsive {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+  }
+}
+
+/* Dark mode enhancements */
+.dark-glass {
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+/* Loading states */
+.loading-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(156, 163, 175, 0.1) 25%,
+    rgba(156, 163, 175, 0.3) 50%,
+    rgba(156, 163, 175, 0.1) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
 }

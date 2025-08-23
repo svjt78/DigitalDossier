@@ -7,6 +7,9 @@ import { useState, useEffect } from 'react';
 import UploadModal from '@/components/UploadModal';
 import ManageSubscriptionsModal from '@/components/ManageSubscriptionsModal';
 import ManageUsersModal from '@/components/ManageUsersModal';
+import SkeletonDashboard from '@/components/SkeletonDashboard';
+import SkeletonList from '@/components/SkeletonList';
+import Button from '@/components/Button';
 import { Edit2, Trash2, RefreshCw, AlertCircle, CheckCircle, Users, Upload, Palette, UserCog, Mail } from 'lucide-react';
 import { isSuperUser, isAuthenticated } from '@/lib/auth-utils';
 
@@ -14,7 +17,7 @@ import { isSuperUser, isAuthenticated } from '@/lib/auth-utils';
 const LoadingScreen = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-800">
     <div className="text-center">
-      <RefreshCw className="h-12 w-12 animate-spin text-orange-400 mx-auto mb-4" />
+      <RefreshCw className="h-12 w-12 animate-spin text-blue-400 mx-auto mb-4" />
       <p className="text-white text-lg">Loading dashboard...</p>
     </div>
   </div>
@@ -304,7 +307,7 @@ export default function Dashboard({ initialData, error: serverError }) {
 
   // Show loading while checking auth
   if (authChecking) {
-    return <LoadingScreen />;
+    return <SkeletonDashboard />;
   }
 
   // If we reach here, user is authenticated and is superuser
@@ -318,7 +321,7 @@ export default function Dashboard({ initialData, error: serverError }) {
 
       <div className="max-w-7xl mx-auto p-4 sm:p-8">
         <div className="mb-6">
-          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">
             Admin Dashboard | Digital Dossier
           </h1>
         </div>
@@ -354,51 +357,51 @@ export default function Dashboard({ initialData, error: serverError }) {
           </div>
         )}
 
-        {/* Action buttons with modern gradients and shadows */}
         <div className="flex flex-wrap justify-end mb-6 gap-3">
-          <button
+          <Button
+            variant="primary"
+            size="md"
+            icon={Upload}
             onClick={() => { 
               setEditingItem(null); 
               setEditingCategory(null); 
               setModalOpen(true); 
             }}
-            className="group relative px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-lg shadow-lg shadow-blue-600/20 transition-all transform hover:scale-105 font-medium flex items-center gap-2"
           >
-            <Upload className="h-4 w-4" />
-            <span>Upload Content</span>
-            <div className="absolute inset-0 rounded-lg bg-white opacity-0 group-hover:opacity-10 transition-opacity"></div>
-          </button>
+            Upload Content
+          </Button>
           
-          <button 
-            disabled 
-            className="px-5 py-2.5 bg-gray-600 text-gray-300 rounded-lg cursor-not-allowed font-medium opacity-50 flex items-center gap-2"
-            title="Coming soon"
+          <Button
+            variant="ghost"
+            size="md"
+            icon={Palette}
+            disabled
+            className="opacity-50 cursor-not-allowed"
           >
-            <Palette className="h-4 w-4" />
-            <span>Create with Canva</span>
-          </button>
+            Create with Canva
+          </Button>
           
-          <button
+          <Button
+            variant="secondary"
+            size="md"
+            icon={Users}
             onClick={() => setManageUsersModalOpen(true)}
-            className="group relative px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg shadow-lg shadow-purple-600/20 transition-all transform hover:scale-105 font-medium flex items-center gap-2"
           >
-            <Users className="h-4 w-4" />
-            <span>Manage Users</span>
-            <div className="absolute inset-0 rounded-lg bg-white opacity-0 group-hover:opacity-10 transition-opacity"></div>
-          </button>
+            Manage Users
+          </Button>
           
-          <button
+          <Button
+            variant="tertiary"
+            size="md"
+            icon={Mail}
             onClick={() => setManageModalOpen(true)}
-            className="group relative px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg shadow-lg shadow-green-600/20 transition-all transform hover:scale-105 font-medium flex items-center gap-2"
           >
-            <Mail className="h-4 w-4" />
-            <span>Manage Subscriptions</span>
-            <div className="absolute inset-0 rounded-lg bg-white opacity-0 group-hover:opacity-10 transition-opacity"></div>
-          </button>
+            Manage Subscriptions
+          </Button>
         </div>
 
-        {/* Category cards with improved styling */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        {/* Enhanced responsive category cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6">
           {['Blog', 'Book', 'Product'].map((cat) => {
             const count = 
               cat === 'Blog' ? localBlogs.length
@@ -411,17 +414,18 @@ export default function Dashboard({ initialData, error: serverError }) {
                 key={cat}
                 onClick={() => handleSelectCategory(cat)}
                 className={`
-                  relative cursor-pointer aspect-square p-6 rounded-xl shadow-xl 
-                  flex flex-col items-center justify-center transition-all transform
+                  relative cursor-pointer p-4 sm:p-6 rounded-xl shadow-xl border transition-all transform duration-300
+                  flex flex-col items-center justify-center
+                  aspect-square sm:aspect-auto sm:min-h-[160px]
                   ${isSelected 
-                    ? 'bg-gradient-to-br from-blue-600 to-purple-600 text-white scale-105 shadow-2xl shadow-blue-600/30' 
-                    : 'bg-gradient-to-br from-gray-800 to-gray-700 text-gray-200 hover:from-gray-700 hover:to-gray-600 hover:scale-102'
+                    ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white scale-105 shadow-2xl shadow-blue-500/30 border-blue-400/30' 
+                    : 'bg-gradient-to-br from-gray-800/80 to-gray-700/80 backdrop-blur-sm text-gray-200 hover:from-gray-700/90 hover:to-gray-600/90 hover:scale-[1.02] border-gray-600/50'
                   }
                 `}
               >
                 <div className="absolute inset-0 rounded-xl bg-white opacity-0 hover:opacity-5 transition-opacity"></div>
-                <span className="text-xl font-semibold">{cat}s</span>
-                <span className="text-4xl font-bold mt-2 bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">
+                <span className="text-lg sm:text-xl font-semibold">{cat}s</span>
+                <span className="text-2xl sm:text-3xl lg:text-4xl font-bold mt-2 bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
                   {count}
                 </span>
               </button>
@@ -468,7 +472,7 @@ export default function Dashboard({ initialData, error: serverError }) {
                           }
                           legacyBehavior
                         >
-                          <a className="text-orange-400 hover:text-orange-300 hover:underline block truncate font-medium">
+                          <a className="text-blue-400 hover:text-blue-300 hover:underline block truncate font-medium transition-colors duration-200">
                             {item.title}
                           </a>
                         </Link>

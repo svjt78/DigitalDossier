@@ -12,9 +12,9 @@ import { useFilter } from '@/components/Navbar';
 import { useSearchQuery } from '@/components/SearchContext';
 
 const badgeClasses = {
-  Blog:    'bg-orange-500',
-  Book:    'bg-blue-500',
-  Product: 'bg-green-500',
+  Blog:    'bg-blue-500',
+  Book:    'bg-indigo-500', 
+  Product: 'bg-cyan-500',
 };
 
 export async function getStaticProps() {

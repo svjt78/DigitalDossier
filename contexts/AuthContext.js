@@ -1,6 +1,6 @@
-// contexts/AuthContext.js - Debug version
+// contexts/AuthContext.js - Enhanced with auto-logout
 import { createContext, useState, useEffect } from 'react';
-import { isSuperUser, isAuthenticated } from '@/lib/auth-utils';
+import { isSuperUser, isAuthenticated, getTimeUntilExpiration, getAuthHeaders } from '@/lib/auth-utils';
 
 export const AuthContext = createContext(null);
 
@@ -10,6 +10,8 @@ export function AuthProvider({ children }) {
   const [email, setEmail] = useState(null);
   const [isSuper, setIsSuper] = useState(false);
   const [isAuth, setIsAuth] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const [sessionWarning, setSessionWarning] = useState(false);
 
   // Load auth state from localStorage on mount
   useEffect(() => {
@@ -69,6 +71,8 @@ export function AuthProvider({ children }) {
     setUsername(username);
     setEmail(email);
     setIsAuth(true);
+    setSessionExpired(false); // Reset session expired state on login
+    setSessionWarning(false); // Reset warning on login
     
     // Check if this user is superuser
     const superStatus = isSuperUser();
@@ -82,6 +86,106 @@ export function AuthProvider({ children }) {
       isAuthenticated: true,
       isSuperUser: superStatus
     });
+  };
+
+  // Token expiration monitoring
+  useEffect(() => {
+    let expirationTimer = null;
+    let warningTimer = null;
+
+    const setupExpirationMonitoring = () => {
+      const timeLeft = getTimeUntilExpiration();
+      
+      if (timeLeft === null || timeLeft <= 0) {
+        if (isAuth) {
+          console.log('🚪 Token expired, auto-logout');
+          handleAutoLogout();
+        }
+        return;
+      }
+
+      console.log(`⏱️ Setting up expiration monitoring: ${timeLeft} seconds remaining`);
+
+      // Clear existing timers
+      if (expirationTimer) clearTimeout(expirationTimer);
+      if (warningTimer) clearTimeout(warningTimer);
+
+      // Set warning timer (2 minutes before expiration)
+      const warningTime = Math.max(0, timeLeft - 120);
+      if (warningTime > 0) {
+        warningTimer = setTimeout(() => {
+          console.log('⚠️ Session expiring soon (2 minutes remaining)');
+          setSessionWarning(true);
+        }, warningTime * 1000);
+      }
+
+      // Set expiration timer
+      expirationTimer = setTimeout(() => {
+        console.log('🚪 Token expired, auto-logout');
+        handleAutoLogout();
+      }, timeLeft * 1000);
+    };
+
+    // Listen for token expiration events
+    const handleTokenExpired = () => {
+      console.log('🚪 Token expiration event received');
+      handleAutoLogout();
+    };
+
+    // Setup monitoring when authenticated
+    if (isAuth) {
+      setupExpirationMonitoring();
+      window.addEventListener('tokenExpired', handleTokenExpired);
+    }
+
+    // Cleanup
+    return () => {
+      if (expirationTimer) clearTimeout(expirationTimer);
+      if (warningTimer) clearTimeout(warningTimer);
+      window.removeEventListener('tokenExpired', handleTokenExpired);
+    };
+  }, [isAuth]);
+
+  // Enhanced logout with auto-logout handling
+  const handleAutoLogout = () => {
+    setSessionExpired(true);
+    setSessionWarning(false); // Clear warning when session expires
+    logout();
+  };
+
+  // Function to extend session (refresh token)
+  const extendSession = async () => {
+    try {
+      // Make a simple authenticated request to refresh the session
+      const response = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.access_token) {
+          // Update the token in localStorage
+          localStorage.setItem('access_token', data.access_token);
+          console.log('✅ Session extended with new token');
+        } else {
+          console.log('✅ Session warning dismissed');
+        }
+        setSessionWarning(false);
+        // The useEffect will automatically set up new timers based on current token
+      } else {
+        // If refresh fails, proceed with normal logout
+        console.log('❌ Session extension failed');
+        handleAutoLogout();
+      }
+    } catch (error) {
+      console.error('Session extension error:', error);
+      // If there's an error, proceed with normal logout
+      handleAutoLogout();
+    }
   };
 
   const logout = () => {
@@ -99,6 +203,8 @@ export function AuthProvider({ children }) {
     setEmail(null);
     setIsAuth(false);
     setIsSuper(false);
+    setSessionExpired(false); // Reset on manual logout
+    setSessionWarning(false); // Reset warning on logout
     
     console.log('✅ Logout complete');
   };
@@ -110,8 +216,13 @@ export function AuthProvider({ children }) {
       email,
       isAuthenticated: isAuth,
       isSuperUser: isSuper,
+      sessionExpired,
+      sessionWarning,
       login, 
-      logout 
+      logout,
+      extendSession,
+      clearSessionExpired: () => setSessionExpired(false),
+      clearSessionWarning: () => setSessionWarning(false)
     }}>
       {children}
     </AuthContext.Provider>
