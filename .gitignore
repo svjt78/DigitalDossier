@@ -1,54 +1,169 @@
-# Node modules
+# ===========================================
+# Comprehensive .gitignore for Blog App
+# ===========================================
+
+# === NODE.JS ===
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Build output
+# === NEXT.JS BUILD OUTPUT ===
 .next/
+out/
 dist/
-
-# TypeScript
+build/
 *.tsbuildinfo
+next-env.d.ts
 
-# Logs
+# === DEPENDENCIES ===
+node_modules/
+jspm_packages/
+
+# === LOGS ===
 logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
 
-# Testing
-coverage/
-
-# OS and IDE files
-.DS_Store
-Thumbs.db
-.vscode/
-.idea/
-
-# Env files
+# === ENVIRONMENT FILES ===
 .env
-.env.*.local
 .env.local
-.env copy
+.env.development.local
+.env.test.local
+.env.production.local
+*.env.local
 
-# Prisma
+# === COPY AND BACKUP FILES ===
+*copy*
+*backup*
+* copy*
+* backup*
+*.bak
+*.backup
+*.orig
+*.tmp
+*.temp
+.env copy
+.env copy 2
+main copy.py
+database copy.py
+models copy.py
+schemas copy.py
+requirements copy.txt
+docker-compose copy.yml
+*.js.backup
+*.py.backup
+*.yml.backup
+*.json.backup
+
+# === DATABASE FILES ===
 prisma/dev.db
 prisma/dev.db-journal
 prisma/migrations/
+postgres_data/
+pgdata/
+*.db
+*.sqlite
+*.sqlite3
 
-# Cache
+# === DOCKER FILES (Development) ===
+docker-compose.override.yml
+Dockerfile.dev.local
+
+# === CACHE DIRECTORIES ===
 .cache/
 .next/cache/
+.nuxt/
+.output/
+.vite/
+dist-ssr/
+*.local
+
+# === IDE AND EDITOR FILES ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# === OS FILES ===
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# === VERCEL ===
 .vercel/
+.vercel
 
-# Optional: if using Docker
-docker-compose.override.yml
+# === TESTING ===
+coverage/
+*.lcov
+.nyc_output/
 
-# Optional: uploaded/generated files
+# === RUNTIME DATA ===
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# === UPLOAD DIRECTORIES ===
 public/uploads/
 uploads/
-postgres_data/
+temp-uploads/
 
-# Misc
-*.swp
-* copy*
+# === SECURITY SENSITIVE FILES ===
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# === TEMPORARY FILES ===
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# === MISC ===
+*.tgz
+*.tar.gz
+.npm/
+.eslintcache
+.stylelintcache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# === PACKAGE MANAGER ===
+.pnp.*
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.js
+
+# === LINTING ===
+.eslintcache
+
+# === TESTING ===
+.jest/
+coverage/
