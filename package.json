@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "next dev -p 3003",
     "build": "next build",
-    "postbuild": "node scripts/generate-sitemap.js",
+    "build:vercel": "next build && npm run sitemap:safe",
+    "sitemap:safe": "node scripts/generate-sitemap.js || echo '⚠️ Sitemap generation skipped - continuing deployment'",
+    "sitemap:generate": "node scripts/generate-sitemap.js",
+    "postbuild": "npm run sitemap:safe",
     "start": "next start",
     "lint": "next lint"
   },

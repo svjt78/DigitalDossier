@@ -107,7 +107,8 @@ fi
 npx prisma generate --schema=./prisma/schema.prisma
 
 echo "Testing production build..."
-# Note: Sitemap generation now handles missing .env.production gracefully
+# Note: Build now includes failsafe sitemap generation
+# Even if DATABASE_URL is not available, build will succeed
 npm run build
 
 if [ $? -eq 0 ]; then
