@@ -6,6 +6,9 @@
 # Local development environment file
 .env
 
+# Production environment file (use Vercel dashboard instead)
+.env.production
+
 # Backup and copy files
 .env copy
 .env copy 2

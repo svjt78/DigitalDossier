@@ -87,27 +87,28 @@ echo -e "${YELLOW}🔨 Step 4: Testing production build...${NC}"
 echo "Installing dependencies..."
 npm ci
 
-echo "Generating Prisma client with production environment..."
-# Force regeneration with production DATABASE_URL
-DATABASE_URL=$(grep "^DATABASE_URL=" .env.production | cut -d '=' -f2-)
-export DATABASE_URL
-echo "🔗 Using DATABASE_URL: ${DATABASE_URL:0:50}..."
+echo "Generating Prisma client with environment variables..."
+# Check if we have DATABASE_URL in environment or .env.production (for local testing)
+if [[ -z "$DATABASE_URL" ]]; then
+    if [[ -f ".env.production" ]]; then
+        echo "📁 Loading DATABASE_URL from .env.production for local testing..."
+        DATABASE_URL=$(grep "^DATABASE_URL=" .env.production | cut -d '=' -f2-)
+        export DATABASE_URL
+    else
+        echo "⚠️ No DATABASE_URL found - some features may be limited"
+        echo "   For full testing, set DATABASE_URL environment variable"
+    fi
+fi
+
+if [[ -n "$DATABASE_URL" ]]; then
+    echo "🔗 Using DATABASE_URL: ${DATABASE_URL:0:50}..."
+fi
+
 npx prisma generate --schema=./prisma/schema.prisma
 
-echo "Testing production build with production environment..."
-# Temporarily move .env out of the way to ensure only .env.production is used
-if [[ -f ".env" ]]; then
-    mv .env .env.temp.backup
-    echo "📦 Temporarily moved .env to .env.temp.backup"
-fi
-
+echo "Testing production build..."
+# Note: Sitemap generation now handles missing .env.production gracefully
 npm run build
-
-# Restore .env file
-if [[ -f ".env.temp.backup" ]]; then
-    mv .env.temp.backup .env
-    echo "📦 Restored .env file"
-fi
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Production build successful${NC}"

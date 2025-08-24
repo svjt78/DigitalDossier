@@ -1,6 +1,57 @@
 # ===========================================
-# Comprehensive .gitignore for Blog App
+# COMPREHENSIVE Security-First .gitignore for Blog App
 # ===========================================
+
+# === CRITICAL SECURITY FILES ===
+# Environment files with production secrets
+.env
+.env.production
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.staging
+.env.*.local
+*.env
+*.env.*
+
+# Environment backup files (CRITICAL - contain production secrets)
+.env.*bak*
+.env.*backup*
+.env.production.bak
+.env.production.backup
+
+# === DATABASE SECURITY ===
+# Database dumps and backups (may contain sensitive user data)
+*.sql
+*.dump
+backup.sql
+database_backups/
+db_backups/
+backups/
+dumps/
+*.db.backup
+*.sql.backup
+*.dump.backup
+
+# Prisma database files
+prisma/dev.db
+prisma/dev.db-journal
+prisma/migrations/
+prisma/*.db*
+
+# Local database data
+postgres_data/
+pgdata/
+pg_data/
+mysql_data/
+mongodb_data/
+
+# === AI/CLAUDE CONVERSATION DATA ===
+.claude/
+.anthropic/
+claude-conversations/
+*.claude.json
 
 # === NODE.JS ===
 node_modules/
@@ -9,6 +60,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+.npm/
 
 # === NEXT.JS BUILD OUTPUT ===
 .next/
@@ -19,7 +71,6 @@ build/
 next-env.d.ts
 
 # === DEPENDENCIES ===
-node_modules/
 jspm_packages/
 
 # === LOGS ===
@@ -31,50 +82,43 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# === ENVIRONMENT FILES ===
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-*.env.local
-
-# === COPY AND BACKUP FILES ===
+# === COPY AND BACKUP FILES (SECURITY CRITICAL) ===
 *copy*
 *backup*
 * copy*
 * backup*
+*_copy*
+*_backup*
 *.bak
 *.backup
 *.orig
+*.old
+*.save
 *.tmp
 *.temp
+
+# Specific copy file patterns
 .env copy
 .env copy 2
+.env.production copy
 main copy.py
 database copy.py
 models copy.py
 schemas copy.py
 requirements copy.txt
 docker-compose copy.yml
+docker-compose copy 2.yml
 *.js.backup
 *.py.backup
 *.yml.backup
 *.json.backup
-
-# === DATABASE FILES ===
-prisma/dev.db
-prisma/dev.db-journal
-prisma/migrations/
-postgres_data/
-pgdata/
-*.db
-*.sqlite
-*.sqlite3
+*.ts.backup
 
 # === DOCKER FILES (Development) ===
 docker-compose.override.yml
+docker-compose.dev.yml
 Dockerfile.dev.local
+Dockerfile copy.dev
 
 # === CACHE DIRECTORIES ===
 .cache/
@@ -98,6 +142,7 @@ dist-ssr/
 .settings/
 *.sublime-workspace
 *.sublime-project
+.vscode-test/
 
 # === OS FILES ===
 .DS_Store
@@ -108,15 +153,19 @@ dist-ssr/
 ehthumbs.db
 Thumbs.db
 Desktop.ini
+Icon\r
 
-# === VERCEL ===
+# === DEPLOYMENT PLATFORMS ===
 .vercel/
 .vercel
+.netlify/
+.railway/
 
 # === TESTING ===
 coverage/
 *.lcov
 .nyc_output/
+.jest/
 
 # === RUNTIME DATA ===
 pids/
@@ -124,34 +173,35 @@ pids/
 *.seed
 *.pid.lock
 
-# === UPLOAD DIRECTORIES ===
+# === UPLOAD DIRECTORIES (may contain user data) ===
 public/uploads/
 uploads/
 temp-uploads/
+user-uploads/
+media-uploads/
 
 # === SECURITY SENSITIVE FILES ===
 *.pem
 *.key
 *.crt
+*.cert
 *.p12
 *.pfx
+*.jks
+id_rsa*
+id_dsa*
+id_ecdsa*
+id_ed25519*
+.ssh/
+.gnupg/
 
 # === TEMPORARY FILES ===
 *.tmp
 *.temp
 .tmp/
 .temp/
-
-# === MISC ===
-*.tgz
-*.tar.gz
-.npm/
-.eslintcache
-.stylelintcache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
+tmp/
+temp/
 
 # === PACKAGE MANAGER ===
 .pnp.*
@@ -163,7 +213,38 @@ temp-uploads/
 
 # === LINTING ===
 .eslintcache
+.stylelintcache
 
-# === TESTING ===
-.jest/
-coverage/
+# === MISC CACHE ===
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# === ARCHIVES ===
+*.tgz
+*.tar.gz
+*.zip
+*.rar
+*.7z
+
+# === SCRIPTS THAT MAY CONTAIN SECRETS ===
+setup-production-env.sh
+deploy-secrets.sh
+*-secrets.*
+*-keys.*
+
+# === AUTO-GENERATED DOCUMENTATION ===
+.docusaurus/
+docs/.vuepress/dist/
+
+# === MONITORING AND PROFILING ===
+.clinic/
+profile/
+*.cpuprofile
+*.heapprofile
+*.heapsnapshot
+
+# === MISCELLANEOUS ===
+.history/
+.ionide/
