@@ -15,7 +15,10 @@ export async function getStaticPaths() {
 export async function getStaticProps({ params }) {
   const blogRaw = await prisma.blog.findUnique({
     where: { slug: params.slug },
-    include: { genre: true },
+    include: { 
+      genre: true,
+      webView: true,
+    },
   });
 
   if (!blogRaw) {
@@ -58,6 +61,7 @@ export async function getStaticProps({ params }) {
         content: blogRaw.content,
         coverUrl,
         pdfUrl,
+        webViewUrl: blogRaw.webView?.objectUrl || null,
         // Include voting and comment data
         netScore: blogRaw.netScore || 0,
         totalVotes: blogRaw.totalVotes || 0,
@@ -135,17 +139,39 @@ export default function BlogDetail({ blog }) {
           </div>
         )}
 
-        {/* PDF button */}
-        {blog.pdfUrl && (
-          <div className="text-center mb-6">
-            <button
-              onClick={handleOpenPdf}
-              className="text-gray-400 text-sm underline"
-            >
-              View PDF
-            </button>
-          </div>
-        )}
+        {/* Action buttons */}
+        <div className="text-center mb-6 space-y-2">
+          {blog.pdfUrl && (
+            <div>
+              <button
+                onClick={handleOpenPdf}
+                className="text-blue-400 text-sm underline hover:text-blue-300 transition-colors"
+              >
+                View PDF
+              </button>
+            </div>
+          )}
+          {blog.webViewUrl && (
+            <div>
+              <button
+                onClick={() => window.open(blog.webViewUrl, '_blank', 'noopener,noreferrer')}
+                className="text-green-400 text-sm underline hover:text-green-300 transition-colors"
+              >
+                View Interactive Web Page
+              </button>
+            </div>
+          )}
+          {!blog.webViewUrl && (
+            <div>
+              <button
+                disabled
+                className="text-gray-500 text-sm cursor-not-allowed"
+              >
+                No Interactive Web Page Available
+              </button>
+            </div>
+          )}
+        </div>
 
         <h1 className="text-3xl sm:text-4xl font-bold mb-4">{blog.title}</h1>
         <p className="text-gray-300 mb-1">By {blog.author}</p>

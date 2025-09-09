@@ -7,10 +7,11 @@ import { useState, useEffect } from 'react';
 import UploadModal from '@/components/UploadModal';
 import ManageSubscriptionsModal from '@/components/ManageSubscriptionsModal';
 import ManageUsersModal from '@/components/ManageUsersModal';
+import WebViewModal from '@/components/WebViewModal';
 import SkeletonDashboard from '@/components/SkeletonDashboard';
 import SkeletonList from '@/components/SkeletonList';
 import Button from '@/components/Button';
-import { Edit2, Trash2, RefreshCw, AlertCircle, CheckCircle, Users, Upload, Palette, UserCog, Mail } from 'lucide-react';
+import { Edit2, Trash2, RefreshCw, AlertCircle, CheckCircle, Users, Upload, Palette, UserCog, Mail, Globe } from 'lucide-react';
 import { isSuperUser, isAuthenticated } from '@/lib/auth-utils';
 
 // Loading component
@@ -37,6 +38,11 @@ export async function getStaticProps() {
           author: true,
           coverKey: true,
           pdfKey: true,
+          webView: {
+            select: {
+              objectUrl: true,
+            },
+          },
           createdAt: true,
           updatedAt: true,
         }
@@ -50,6 +56,11 @@ export async function getStaticProps() {
           author: true,
           coverKey: true,
           pdfKey: true,
+          webView: {
+            select: {
+              objectUrl: true,
+            },
+          },
           createdAt: true,
           updatedAt: true,
         }
@@ -63,6 +74,11 @@ export async function getStaticProps() {
           author: true,
           coverKey: true,
           pdfKey: true,
+          webView: {
+            select: {
+              objectUrl: true,
+            },
+          },
           createdAt: true,
           updatedAt: true,
         }
@@ -81,6 +97,8 @@ export async function getStaticProps() {
       ...item,
       coverUrl: buildUrl(item.coverKey),
       pdfUrl: buildUrl(item.pdfKey),
+      webViewUrl: item.webView?.objectUrl || null,
+      hasWebView: !!item.webView?.objectUrl,
       createdAt: item.createdAt.toISOString(),
       updatedAt: item.updatedAt.toISOString(),
     });
@@ -127,10 +145,12 @@ export default function Dashboard({ initialData, error: serverError }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [manageModalOpen, setManageModalOpen] = useState(false);
   const [manageUsersModalOpen, setManageUsersModalOpen] = useState(false);
+  const [webViewModalOpen, setWebViewModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('Blog');
   const [editingItem, setEditingItem] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(null);
+  const [webViewItem, setWebViewItem] = useState(null);
 
   // Client-side authentication and superuser check
   useEffect(() => {
@@ -248,6 +268,43 @@ export default function Dashboard({ initialData, error: serverError }) {
     } finally {
       setDeleteLoading(null);
     }
+  };
+
+  // Web view handler
+  const handleWebView = (item) => {
+    setWebViewItem(item);
+    setWebViewModalOpen(true);
+  };
+
+  // Web view save handler
+  const handleWebViewSave = (webView) => {
+    const isRemoval = webView === null;
+    const successMessage = isRemoval 
+      ? `Interactive web page association removed from "${webViewItem.title}" successfully`
+      : `Interactive web page associated with "${webViewItem.title}" successfully`;
+
+    // Update local state
+    const updatedItem = {
+      ...webViewItem,
+      webViewUrl: webView?.objectUrl || null,
+      hasWebView: !!webView?.objectUrl,
+    };
+
+    const updateStateArray = (prevArray) => 
+      prevArray.map(item => item.id === webViewItem.id ? updatedItem : item);
+
+    if (selectedCategory === 'Blog') {
+      setLocalBlogs(updateStateArray);
+    } else if (selectedCategory === 'Book') {
+      setLocalBooks(updateStateArray);
+    } else {
+      setLocalProducts(updateStateArray);
+    }
+
+    setSuccessMessage(successMessage);
+    setTimeout(() => setSuccessMessage(''), 5000);
+    setWebViewModalOpen(false);
+    setWebViewItem(null);
   };
 
   // Upload save handler
@@ -494,6 +551,20 @@ export default function Dashboard({ initialData, error: serverError }) {
                         <Edit2 size={18} />
                       </button>
                       <button 
+                        onClick={() => handleWebView(item)} 
+                        className={`relative p-2 rounded-lg transition-all ${
+                          item.hasWebView
+                            ? 'text-green-400 hover:text-green-300 hover:bg-green-400/10 bg-green-400/5'
+                            : 'text-gray-400 hover:text-green-400 hover:bg-green-400/10'
+                        }`}
+                        title={item.hasWebView ? "Manage Interactive Web Page Association" : "Associate Interactive Web Page"}
+                      >
+                        <Globe size={18} />
+                        {item.hasWebView && (
+                          <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full"></div>
+                        )}
+                      </button>
+                      <button 
                         onClick={() => handleDelete(item)} 
                         disabled={deleteLoading === item.id}
                         className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all disabled:opacity-50"
@@ -536,6 +607,20 @@ export default function Dashboard({ initialData, error: serverError }) {
         {manageUsersModalOpen && (
           <ManageUsersModal 
             onClose={() => setManageUsersModalOpen(false)} 
+          />
+        )}
+
+        {webViewModalOpen && webViewItem && (
+          <WebViewModal 
+            isOpen={webViewModalOpen}
+            onClose={() => {
+              setWebViewModalOpen(false);
+              setWebViewItem(null);
+            }}
+            onSave={handleWebViewSave}
+            contentType={selectedCategory.toLowerCase()}
+            contentId={webViewItem.id}
+            initialUrl={webViewItem.webViewUrl}
           />
         )}
       </div>

@@ -17,7 +17,10 @@ export async function getStaticPaths() {
 export async function getStaticProps({ params }) {
   const productRaw = await prisma.product.findUnique({
     where: { slug: params.slug },
-    include: { genre: true },
+    include: { 
+      genre: true,
+      webView: true,
+    },
   });
 
   if (!productRaw) {
@@ -44,6 +47,7 @@ export async function getStaticProps({ params }) {
     genre: productRaw.genre?.name || null,
     coverUrl,
     pdfUrl,
+    webViewUrl: productRaw.webView?.objectUrl || null,
     // Include voting and comment data
     netScore: productRaw.netScore || 0,
     totalVotes: productRaw.totalVotes || 0,
@@ -132,6 +136,40 @@ export default function ProductDetail({ product }) {
             </div>
           )
         )}
+
+        {/* Action buttons */}
+        <div className="text-center mb-6 space-y-2">
+          {product.pdfUrl && (
+            <div>
+              <button
+                onClick={() => setPdfViewerOpen(true)}
+                className="text-blue-400 text-sm underline hover:text-blue-300 transition-colors"
+              >
+                View PDF
+              </button>
+            </div>
+          )}
+          {product.webViewUrl && (
+            <div>
+              <button
+                onClick={() => window.open(product.webViewUrl, '_blank', 'noopener,noreferrer')}
+                className="text-green-400 text-sm underline hover:text-green-300 transition-colors"
+              >
+                View Interactive Web Page
+              </button>
+            </div>
+          )}
+          {!product.webViewUrl && (
+            <div>
+              <button
+                disabled
+                className="text-gray-500 text-sm cursor-not-allowed"
+              >
+                No Interactive Web Page Available
+              </button>
+            </div>
+          )}
+        </div>
 
         <h1 className="text-2xl sm:text-4xl font-bold mb-4">
           {product.title}

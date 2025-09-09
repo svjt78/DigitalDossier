@@ -17,7 +17,10 @@ export async function getStaticPaths() {
 export async function getStaticProps({ params }) {
   const bookRaw = await prisma.book.findUnique({
     where: { slug: params.slug },
-    include: { genre: true },
+    include: { 
+      genre: true,
+      webView: true,
+    },
   })
   if (!bookRaw) {
     return { notFound: true }
@@ -50,6 +53,7 @@ export async function getStaticProps({ params }) {
     updatedAt: bookRaw.updatedAt.toISOString(),
     coverUrl,
     pdfUrl,
+    webViewUrl: bookRaw.webView?.objectUrl || null,
     // Include voting and comment data
     netScore: bookRaw.netScore || 0,
     totalVotes: bookRaw.totalVotes || 0,
@@ -150,6 +154,40 @@ export default function BookDetail({ book }) {
             />
           )
         )}
+
+        {/* Action buttons */}
+        <div className="text-center mb-6 space-y-2">
+          {book.pdfUrl && (
+            <div>
+              <button
+                onClick={() => setPdfViewerOpen(true)}
+                className="text-blue-400 text-sm underline hover:text-blue-300 transition-colors"
+              >
+                View PDF
+              </button>
+            </div>
+          )}
+          {book.webViewUrl && (
+            <div>
+              <button
+                onClick={() => window.open(book.webViewUrl, '_blank', 'noopener,noreferrer')}
+                className="text-green-400 text-sm underline hover:text-green-300 transition-colors"
+              >
+                View Interactive Web Page
+              </button>
+            </div>
+          )}
+          {!book.webViewUrl && (
+            <div>
+              <button
+                disabled
+                className="text-gray-500 text-sm cursor-not-allowed"
+              >
+                No Interactive Web Page Available
+              </button>
+            </div>
+          )}
+        </div>
 
         <h1 className="text-3xl sm:text-4xl font-bold mb-2">
           {book.title}
