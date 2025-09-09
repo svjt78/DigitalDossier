@@ -29,6 +29,7 @@ model Blog {
   coverKey     String?   @map("cover_key")
   pdfKey       String?   @map("pdf_key")
   tags         BlogTag[]
+  webView      WebView?
   
   // New voting and comment aggregation fields
   netScore     Int       @default(0) @map("net_score")
@@ -53,6 +54,7 @@ model Book {
   coverKey     String?   @map("cover_key")
   pdfKey       String?   @map("pdf_key")
   tags         BookTag[]
+  webView      WebView?
   
   // New voting and comment aggregation fields
   netScore     Int       @default(0) @map("net_score")
@@ -77,6 +79,7 @@ model Product {
   coverKey     String?      @map("cover_key")
   pdfKey       String?      @map("pdf_key")
   tags         ProductTag[]
+  webView      WebView?
   
   // New voting and comment aggregation fields
   netScore     Int          @default(0) @map("net_score")
@@ -210,4 +213,39 @@ model Vote {
   @@index([contentType, contentId, voteType]) // Performance index for aggregations
   @@index([userId])
   @@map("vote")
+}
+
+model WebView {
+  id        Int      @id @default(autoincrement())
+  blogId    Int?     @map("blog_id")
+  bookId    Int?     @map("book_id")
+  productId Int?     @map("product_id")
+  objectUrl String   @map("object_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Foreign key relationships
+  blog      Blog?    @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  book      Book?    @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Ensure exactly one content type is associated
+  @@unique([blogId])
+  @@unique([bookId])
+  @@unique([productId])
+  @@map("web_view")
+}
+
+model ApiToken {
+  id          String    @id @default(cuid())
+  name        String
+  token       String    @unique
+  permissions String[]
+  isActive    Boolean   @default(true)
+  lastUsed    DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("api_token")
 }

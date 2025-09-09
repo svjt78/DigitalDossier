@@ -52,6 +52,7 @@ mongodb_data/
 .anthropic/
 claude-conversations/
 *.claude.json
+CLAUDE.md
 
 # === NODE.JS ===
 node_modules/
