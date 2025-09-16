@@ -9,7 +9,7 @@ export default function SessionWarningBanner() {
   if (!sessionWarning) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-40 bg-yellow-600 text-white p-3 shadow-lg">
+    <div className="fixed top-0 left-0 right-0 z-[60] bg-yellow-600 text-white p-3 shadow-lg">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Clock size={20} />

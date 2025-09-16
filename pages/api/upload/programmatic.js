@@ -1,6 +1,9 @@
 import { authenticateApiRequest } from '@/lib/api-auth';
 import { createContentItem, validateContentData } from '@/lib/upload-service';
 
+// Disable Next.js body parser to handle large payloads (DALL-E images ~1-2MB)
+export const config = { api: { bodyParser: false } };
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -19,7 +22,31 @@ export default async function handler(req, res) {
   }
 
   try {
-    const contentData = req.body;
+    // Manually parse JSON body since bodyParser is disabled for large payloads
+    let contentData;
+    if (req.body) {
+      // bodyParser was enabled (shouldn't happen with our config)
+      contentData = req.body;
+    } else {
+      // Manually parse raw body
+      const chunks = [];
+      for await (const chunk of req) {
+        chunks.push(chunk);
+      }
+      const rawBody = Buffer.concat(chunks).toString('utf8');
+      try {
+        contentData = JSON.parse(rawBody);
+      } catch (parseError) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'INVALID_JSON',
+            message: 'Invalid JSON in request body',
+            details: { field: 'body' }
+          }
+        });
+      }
+    }
     
     const validation = validateContentData(contentData);
     if (!validation.isValid) {
