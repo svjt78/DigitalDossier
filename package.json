@@ -2,6 +2,7 @@
   "name": "books-dashboard",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev -p 3003",
     "build": "next build",
@@ -10,7 +11,13 @@
     "sitemap:generate": "node scripts/generate-sitemap.js",
     "postbuild": "npm run sitemap:safe",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "cleanup:s3": "node scripts/cleanup-orphaned-s3-files.js",
+    "cleanup:s3:execute": "node scripts/cleanup-orphaned-s3-files.js --execute --force",
+    "cleanup:s3:pdf": "node scripts/cleanup-orphaned-s3-files.js --file-type pdf",
+    "cleanup:s3:images": "node scripts/cleanup-orphaned-s3-files.js --file-type png",
+    "cleanup:s3:local": "DATABASE_URL=postgresql://postgres:admin123@localhost:5432/blogdb node scripts/cleanup-orphaned-s3-files.js",
+    "cleanup:s3:local:execute": "DATABASE_URL=postgresql://postgres:admin123@localhost:5432/blogdb node scripts/cleanup-orphaned-s3-files.js --execute"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.816.0",
