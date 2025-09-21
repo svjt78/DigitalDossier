@@ -1,5 +1,5 @@
-import { authenticateApiRequest } from '@/lib/api-auth';
-import { createContentItem, validateContentData } from '@/lib/upload-service';
+const { authenticateApiRequest } = require('../../../lib/api-auth');
+const { createContentItem, validateContentData } = require('../../../lib/upload-service');
 
 // Disable Next.js body parser to handle large payloads (DALL-E images ~1-2MB)
 export const config = { api: { bodyParser: false } };

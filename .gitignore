@@ -54,6 +54,9 @@ claude-conversations/
 *.claude.json
 CLAUDE.md
 
+# === TECHNICAL DOCUMENTATION (Internal) ===
+BLOG_APP_MODULE_CONFLICT_RESOLUTION.md
+
 # === NODE.JS ===
 node_modules/
 npm-debug.log*
