@@ -115,8 +115,7 @@ async function handleCreateVote(req, res, userId, contentType, contentId) {
         }
       },
       update: {
-        vote_type: voteType,
-        updated_at: new Date()
+        vote_type: voteType
       },
       create: {
         user_id: userId,

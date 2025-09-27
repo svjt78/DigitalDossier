@@ -144,7 +144,8 @@ async function handleCreateComment(req, res, contentType, contentId) {
         author_id: user.id,          // Now this is a proper integer
         content_type: contentType,
         content_id: contentId,
-        parent_id: parentId ? parseInt(parentId) : null
+        parent_id: parentId ? parseInt(parentId) : null,
+        updated_at: new Date()
       },
       include: {
         user: {
