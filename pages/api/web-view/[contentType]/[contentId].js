@@ -90,13 +90,31 @@ export default async function handler(req, res) {
 
 async function handleGet(req, res, contentType, contentId) {
   try {
-    const whereClause = {};
-    whereClause[`${contentType}Id`] = contentId;
+    const id = parseInt(contentId);
+    let content;
+    
+    switch (contentType) {
+      case 'blog':
+        content = await prisma.blog.findUnique({ 
+          where: { id },
+          select: { html_key: true }
+        });
+        break;
+      case 'book':
+        content = await prisma.book.findUnique({ 
+          where: { id },
+          select: { html_key: true }
+        });
+        break;
+      case 'product':
+        content = await prisma.product.findUnique({ 
+          where: { id },
+          select: { html_key: true }
+        });
+        break;
+    }
 
-    const webView = await prisma.webView.findUnique({
-      where: whereClause,
-    });
-
+    const webView = content?.html_key ? { objectUrl: content.html_key } : null;
     return res.status(200).json({ webView });
   } catch (error) {
     console.error('Error fetching web view:', error);
@@ -118,21 +136,35 @@ async function handlePost(req, res, contentType, contentId) {
       return res.status(400).json({ error: 'Invalid object URL format' });
     }
 
-    const data = {
-      objectUrl,
-      [`${contentType}Id`]: contentId,
-    };
+    const id = parseInt(contentId);
+    let updatedContent;
+    
+    // Update the html_key field directly on the content table
+    switch (contentType) {
+      case 'blog':
+        updatedContent = await prisma.blog.update({
+          where: { id },
+          data: { html_key: objectUrl },
+          select: { id: true, html_key: true }
+        });
+        break;
+      case 'book':
+        updatedContent = await prisma.book.update({
+          where: { id },
+          data: { html_key: objectUrl },
+          select: { id: true, html_key: true }
+        });
+        break;
+      case 'product':
+        updatedContent = await prisma.product.update({
+          where: { id },
+          data: { html_key: objectUrl },
+          select: { id: true, html_key: true }
+        });
+        break;
+    }
 
-    const whereClause = {};
-    whereClause[`${contentType}Id`] = contentId;
-
-    // Upsert - create if not exists, update if exists
-    const webView = await prisma.webView.upsert({
-      where: whereClause,
-      update: { objectUrl },
-      create: data,
-    });
-
+    const webView = { objectUrl: updatedContent.html_key };
     return res.status(200).json({ webView, message: 'Web view association saved successfully' });
   } catch (error) {
     console.error('Error saving web view:', error);
@@ -142,20 +174,41 @@ async function handlePost(req, res, contentType, contentId) {
 
 async function handleDelete(req, res, contentType, contentId) {
   try {
-    const whereClause = {};
-    whereClause[`${contentType}Id`] = contentId;
-
-    const deletedWebView = await prisma.webView.delete({
-      where: whereClause,
-    });
+    const id = parseInt(contentId);
+    let updatedContent;
+    
+    // Clear the html_key field (set to null)
+    switch (contentType) {
+      case 'blog':
+        updatedContent = await prisma.blog.update({
+          where: { id },
+          data: { html_key: null },
+          select: { id: true, html_key: true }
+        });
+        break;
+      case 'book':
+        updatedContent = await prisma.book.update({
+          where: { id },
+          data: { html_key: null },
+          select: { id: true, html_key: true }
+        });
+        break;
+      case 'product':
+        updatedContent = await prisma.product.update({
+          where: { id },
+          data: { html_key: null },
+          select: { id: true, html_key: true }
+        });
+        break;
+    }
 
     return res.status(200).json({ 
       message: 'Web view association deleted successfully',
-      deletedWebView 
+      deletedWebView: { objectUrl: null }
     });
   } catch (error) {
     if (error.code === 'P2025') {
-      return res.status(404).json({ error: 'Web view association not found' });
+      return res.status(404).json({ error: 'Content not found' });
     }
     
     console.error('Error deleting web view:', error);

@@ -69,10 +69,10 @@ async function handleGetVote(req, res, userId, contentType, contentId) {
     // Get user's current vote
     const userVote = await tx.vote.findUnique({
       where: {
-        userId_contentType_contentId: {
-          userId,
-          contentType,
-          contentId
+        user_id_content_type_content_id: {
+          user_id: userId,
+          content_type: contentType,
+          content_id: contentId
         }
       }
     });
@@ -81,7 +81,7 @@ async function handleGetVote(req, res, userId, contentType, contentId) {
     const aggregates = await calculateVoteAggregates(tx, contentType, contentId);
 
     return {
-      userVote: userVote?.voteType || null,
+      userVote: userVote?.vote_type || null,
       ...aggregates
     };
   });
@@ -108,21 +108,21 @@ async function handleCreateVote(req, res, userId, contentType, contentId) {
     // Upsert the vote (create or update)
     const vote = await tx.vote.upsert({
       where: {
-        userId_contentType_contentId: {
-          userId,
-          contentType,
-          contentId
+        user_id_content_type_content_id: {
+          user_id: userId,
+          content_type: contentType,
+          content_id: contentId
         }
       },
       update: {
-        voteType,
-        updatedAt: new Date()
+        vote_type: voteType,
+        updated_at: new Date()
       },
       create: {
-        userId,
-        contentType,
-        contentId,
-        voteType
+        user_id: userId,
+        content_type: contentType,
+        content_id: contentId,
+        vote_type: voteType
       }
     });
 
@@ -130,7 +130,7 @@ async function handleCreateVote(req, res, userId, contentType, contentId) {
     const aggregates = await calculateAndUpdateAggregates(tx, contentType, contentId);
 
     return {
-      userVote: vote.voteType,
+      userVote: vote.vote_type,
       ...aggregates
     };
   });
@@ -156,9 +156,9 @@ async function handleDeleteVote(req, res, userId, contentType, contentId) {
     // Delete the vote
     await tx.vote.deleteMany({
       where: {
-        userId,
-        contentType,
-        contentId
+        user_id: userId,
+        content_type: contentType,
+        content_id: contentId
       }
     });
 
@@ -199,13 +199,13 @@ async function checkContentExists(tx, contentType, contentId) {
 // FIXED: Calculate vote aggregates within transaction
 async function calculateVoteAggregates(tx, contentType, contentId) {
   const votes = await tx.vote.groupBy({
-    by: ['voteType'],
+    by: ['vote_type'],
     where: {
-      contentType,
-      contentId
+      content_type: contentType,
+      content_id: contentId
     },
     _count: {
-      voteType: true
+      vote_type: true
     }
   });
 
@@ -213,10 +213,10 @@ async function calculateVoteAggregates(tx, contentType, contentId) {
   let downvotes = 0;
 
   votes.forEach(vote => {
-    if (vote.voteType === 'up') {
-      upvotes = vote._count.voteType;
-    } else if (vote.voteType === 'down') {
-      downvotes = vote._count.voteType;
+    if (vote.vote_type === 'up') {
+      upvotes = vote._count.vote_type;
+    } else if (vote.vote_type === 'down') {
+      downvotes = vote._count.vote_type;
     }
   });
 
@@ -244,8 +244,8 @@ async function calculateAndUpdateAggregates(tx, contentType, contentId) {
   await tx[model].update({
     where: { id: contentId },
     data: {
-      netScore: aggregates.netScore,
-      totalVotes: aggregates.totalVotes
+      net_score: aggregates.netScore,
+      total_votes: aggregates.totalVotes
     }
   });
 

@@ -14,17 +14,21 @@ export default async function handler(req, res) {
         id: true,
         email: true,
         name: true,
-        createdAt: true,
-        updatedAt: true,
+        created_at: true,
+        updated_at: true,
       },
       orderBy: {
-        createdAt: 'desc',
+        created_at: 'desc',
       },
     });
 
-    // Return users with additional status
+    // Return users with additional status and map field names for frontend compatibility
     const usersWithStatus = users.map(user => ({
-      ...user,
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      createdAt: user.created_at,
+      updatedAt: user.updated_at,
       isVerified: true, // You can add actual verification status if tracked
     }));
 

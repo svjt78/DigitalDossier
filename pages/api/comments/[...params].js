@@ -55,12 +55,12 @@ async function handleGetComments(req, res, contentType, contentId) {
   // Get all comments for this content
   const comments = await prisma.comment.findMany({
     where: {
-      contentType,
-      contentId,
-      isDeleted: false
+      content_type: contentType,
+      content_id: contentId,
+      is_deleted: false
     },
     include: {
-      author: {
+      user: {
         select: {
           id: true,
           name: true,
@@ -69,7 +69,7 @@ async function handleGetComments(req, res, contentType, contentId) {
       }
     },
     orderBy: {
-      createdAt: 'asc' // Chronological order for proper threading
+      created_at: 'asc' // Chronological order for proper threading
     }
   });
 
@@ -79,9 +79,9 @@ async function handleGetComments(req, res, contentType, contentId) {
   // Get total count
   const totalCount = await prisma.comment.count({
     where: {
-      contentType,
-      contentId,
-      isDeleted: false
+      content_type: contentType,
+      content_id: contentId,
+      is_deleted: false
     }
   });
 
@@ -123,14 +123,14 @@ async function handleCreateComment(req, res, contentType, contentId) {
   if (parentId) {
     const parentComment = await prisma.comment.findUnique({
       where: { id: parseInt(parentId) },
-      select: { id: true, contentType: true, contentId: true, isDeleted: true }
+      select: { id: true, content_type: true, content_id: true, is_deleted: true }
     });
 
-    if (!parentComment || parentComment.isDeleted) {
+    if (!parentComment || parentComment.is_deleted) {
       return res.status(404).json({ error: 'Parent comment not found' });
     }
 
-    if (parentComment.contentType !== contentType || parentComment.contentId !== contentId) {
+    if (parentComment.content_type !== contentType || parentComment.content_id !== contentId) {
       return res.status(400).json({ error: 'Parent comment does not belong to this content' });
     }
   }
@@ -141,13 +141,13 @@ async function handleCreateComment(req, res, contentType, contentId) {
     const comment = await tx.comment.create({
       data: {
         content: content.trim(),
-        authorId: user.id,          // Now this is a proper integer
-        contentType,
-        contentId,
-        parentId: parentId ? parseInt(parentId) : null
+        author_id: user.id,          // Now this is a proper integer
+        content_type: contentType,
+        content_id: contentId,
+        parent_id: parentId ? parseInt(parentId) : null
       },
       include: {
-        author: {
+        user: {
           select: {
             id: true,
             name: true,
@@ -198,9 +198,9 @@ function buildCommentTree(comments) {
 
   // Second pass: build the tree structure
   comments.forEach(comment => {
-    if (comment.parentId) {
+    if (comment.parent_id) {
       // This is a reply
-      const parent = commentMap.get(comment.parentId);
+      const parent = commentMap.get(comment.parent_id);
       if (parent) {
         parent.replies.push(commentMap.get(comment.id));
       }
@@ -217,9 +217,9 @@ function buildCommentTree(comments) {
 async function updateContentCommentCount(tx, contentType, contentId) {
   const count = await tx.comment.count({
     where: {
-      contentType,
-      contentId,
-      isDeleted: false
+      content_type: contentType,
+      content_id: contentId,
+      is_deleted: false
     }
   });
 
@@ -234,7 +234,7 @@ async function updateContentCommentCount(tx, contentType, contentId) {
   await tx[model].update({
     where: { id: contentId },
     data: {
-      commentCount: count
+      comment_count: count
     }
   });
 }
