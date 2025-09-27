@@ -25,42 +25,42 @@ export async function getStaticProps() {
     // Fetch data without authentication
     const [blogs, books, products] = await Promise.all([
       prisma.blog.findMany({ 
-        orderBy: { createdAt: 'desc' },
+        orderBy: { created_at: 'desc' },
         select: {
           id: true,
           title: true,
           slug: true,
           author: true,
-          coverKey: true,
-          pdfKey: true,
-          createdAt: true,
-          updatedAt: true,
+          cover_key: true,
+          pdf_key: true,
+          created_at: true,
+          updated_at: true,
         }
       }),
       prisma.book.findMany({ 
-        orderBy: { createdAt: 'desc' },
+        orderBy: { created_at: 'desc' },
         select: {
           id: true,
           title: true,
           slug: true,
           author: true,
-          coverKey: true,
-          pdfKey: true,
-          createdAt: true,
-          updatedAt: true,
+          cover_key: true,
+          pdf_key: true,
+          created_at: true,
+          updated_at: true,
         }
       }),
       prisma.product.findMany({ 
-        orderBy: { createdAt: 'desc' },
+        orderBy: { created_at: 'desc' },
         select: {
           id: true,
           title: true,
           slug: true,
           author: true,
-          coverKey: true,
-          pdfKey: true,
-          createdAt: true,
-          updatedAt: true,
+          cover_key: true,
+          pdf_key: true,
+          created_at: true,
+          updated_at: true,
         }
       }),
     ]);
@@ -73,13 +73,16 @@ export async function getStaticProps() {
       return `https://${bucket}.s3.${region}.amazonaws.com/${encodeURI(key)}`;
     };
 
-    const mapUrls = (item) => ({
-      ...item,
-      coverUrl: buildUrl(item.coverKey),
-      pdfUrl: buildUrl(item.pdfKey),
-      createdAt: item.createdAt.toISOString(),
-      updatedAt: item.updatedAt.toISOString(),
-    });
+    const mapUrls = (item) => {
+      const { created_at, updated_at, cover_key, pdf_key, ...itemWithoutDates } = item;
+      return {
+        ...itemWithoutDates,
+        coverUrl: buildUrl(cover_key),
+        pdfUrl: buildUrl(pdf_key),
+        createdAt: created_at ? created_at.toISOString() : new Date().toISOString(),
+        updatedAt: updated_at ? updated_at.toISOString() : new Date().toISOString(),
+      };
+    };
 
     return {
       props: {

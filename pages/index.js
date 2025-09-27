@@ -24,48 +24,48 @@ export async function getStaticProps() {
     // Fetch all content with engagement data using consistent queries
     const [blogs, books, products] = await Promise.all([
       prisma.blog.findMany({ 
-        orderBy: { createdAt: 'desc' },
+        orderBy: { created_at: 'desc' },
         select: {
           id: true,
           title: true,
           slug: true,
           author: true,
-          coverKey: true,
-          netScore: true,
-          totalVotes: true,
-          commentCount: true,
-          createdAt: true,
-          updatedAt: true
+          cover_key: true,
+          net_score: true,
+          total_votes: true,
+          comment_count: true,
+          created_at: true,
+          updated_at: true
         }
       }),
       prisma.book.findMany({ 
-        orderBy: { createdAt: 'desc' },
+        orderBy: { created_at: 'desc' },
         select: {
           id: true,
           title: true,
           slug: true,
           author: true,
-          coverKey: true,
-          netScore: true,
-          totalVotes: true,
-          commentCount: true,
-          createdAt: true,
-          updatedAt: true
+          cover_key: true,
+          net_score: true,
+          total_votes: true,
+          comment_count: true,
+          created_at: true,
+          updated_at: true
         }
       }),
       prisma.product.findMany({ 
-        orderBy: { createdAt: 'desc' },
+        orderBy: { created_at: 'desc' },
         select: {
           id: true,
           title: true,
           slug: true,
           author: true,
-          coverKey: true,
-          netScore: true,
-          totalVotes: true,
-          commentCount: true,
-          createdAt: true,
-          updatedAt: true
+          cover_key: true,
+          net_score: true,
+          total_votes: true,
+          comment_count: true,
+          created_at: true,
+          updated_at: true
         }
       }),
     ]);
@@ -80,7 +80,7 @@ export async function getStaticProps() {
       ...blogsWithType,
       ...booksWithType,
       ...productsWithType,
-    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
     // Build full S3 URLs for cover images
     const bucket  = process.env.AWS_S3_BUCKET;
@@ -89,8 +89,8 @@ export async function getStaticProps() {
 
     const itemsWithUrls = merged.map(item => ({
       ...item,
-      coverUrl: item.coverKey
-        ? `${baseUrl}/${encodeURI(item.coverKey)}`
+      coverUrl: item.cover_key
+        ? `${baseUrl}/${encodeURI(item.cover_key)}`
         : null,
     }));
 

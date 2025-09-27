@@ -17,7 +17,6 @@ export async function getStaticProps({ params }) {
     where: { slug: params.slug },
     include: { 
       genre: true,
-      webView: true,
     },
   });
 
@@ -31,8 +30,8 @@ export async function getStaticProps({ params }) {
   const pdfPrefix = process.env.S3_CONTENT_PDFS_PREFIX;
   const baseUrl = `https://${bucket}.s3.${region}.amazonaws.com`;
 
-  const coverUrl = blogRaw.coverKey
-    ? `${baseUrl}/${imagesPrefix}/${blogRaw.coverKey
+  const coverUrl = blogRaw.cover_key
+    ? `${baseUrl}/${imagesPrefix}/${blogRaw.cover_key
         .split('/')
         .pop()
         .split('/')
@@ -40,8 +39,8 @@ export async function getStaticProps({ params }) {
         .join('/')}`
     : null;
 
-  const pdfUrl = blogRaw.pdfKey
-    ? `${baseUrl}/${pdfPrefix}/${blogRaw.pdfKey
+  const pdfUrl = blogRaw.pdf_key
+    ? `${baseUrl}/${pdfPrefix}/${blogRaw.pdf_key
         .split('/')
         .pop()
         .split('/')
@@ -61,13 +60,12 @@ export async function getStaticProps({ params }) {
         content: blogRaw.content,
         coverUrl,
         pdfUrl,
-        webViewUrl: blogRaw.webView?.objectUrl || null,
         // Include voting and comment data
-        netScore: blogRaw.netScore || 0,
-        totalVotes: blogRaw.totalVotes || 0,
-        commentCount: blogRaw.commentCount || 0,
-        createdAt: blogRaw.createdAt.toISOString(),
-        updatedAt: blogRaw.updatedAt.toISOString(),
+        netScore: blogRaw.net_score || 0,
+        totalVotes: blogRaw.total_votes || 0,
+        commentCount: blogRaw.comment_count || 0,
+        createdAt: blogRaw.created_at.toISOString(),
+        updatedAt: blogRaw.updated_at.toISOString(),
       },
     },
     revalidate: 60,

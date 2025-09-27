@@ -19,7 +19,6 @@ export async function getStaticProps({ params }) {
     where: { slug: params.slug },
     include: { 
       genre: true,
-      webView: true,
     },
   })
   if (!bookRaw) {
@@ -34,30 +33,30 @@ export async function getStaticProps({ params }) {
   const baseUrl = `https://${bucket}.s3.${region}.amazonaws.com`
 
   let coverUrl = null
-  if (bookRaw.coverKey) {
-    const filename = bookRaw.coverKey.split('/').pop()
+  if (bookRaw.cover_key) {
+    const filename = bookRaw.cover_key.split('/').pop()
     coverUrl = `${baseUrl}/${imagesPrefix}/${encodeURIComponent(filename)}`
   }
 
   let pdfUrl = null
-  if (bookRaw.pdfKey) {
-    const filename = bookRaw.pdfKey.split('/').pop()
+  if (bookRaw.pdf_key) {
+    const filename = bookRaw.pdf_key.split('/').pop()
     pdfUrl = `${baseUrl}/${pdfsPrefix}/${encodeURIComponent(filename)}`
   }
 
   // Serialize and include genre name
+  const { created_at, updated_at, cover_key, pdf_key, net_score, total_votes, comment_count, ...bookWithoutDates } = bookRaw;
   const serializedBook = {
-    ...bookRaw,
+    ...bookWithoutDates,
     genre: bookRaw.genre?.name || null,
-    createdAt: bookRaw.createdAt.toISOString(),
-    updatedAt: bookRaw.updatedAt.toISOString(),
+    createdAt: bookRaw.created_at.toISOString(),
+    updatedAt: bookRaw.updated_at.toISOString(),
     coverUrl,
     pdfUrl,
-    webViewUrl: bookRaw.webView?.objectUrl || null,
     // Include voting and comment data
-    netScore: bookRaw.netScore || 0,
-    totalVotes: bookRaw.totalVotes || 0,
-    commentCount: bookRaw.commentCount || 0,
+    netScore: bookRaw.net_score || 0,
+    totalVotes: bookRaw.total_votes || 0,
+    commentCount: bookRaw.comment_count || 0,
   }
 
   return {

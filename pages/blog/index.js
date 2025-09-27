@@ -10,7 +10,7 @@ import BlogCard from '@/components/BlogCard';
 export async function getStaticProps() {
   // Fetch raw blog records
   const rawBlogs = await prisma.blog.findMany({
-    orderBy: { createdAt: 'desc' },
+    orderBy: { created_at: 'desc' },
   });
 
   // Build full S3 URLs using your AWS env vars
@@ -22,11 +22,11 @@ export async function getStaticProps() {
 
   const blogs = rawBlogs.map(blog => ({
     ...blog,
-    coverUrl: blog.coverKey
-      ? `${s3BaseUrl}/${encodeURIComponent(blog.coverKey)}`
+    coverUrl: blog.cover_key
+      ? `${s3BaseUrl}/${encodeURIComponent(blog.cover_key)}`
       : null,
-    pdfUrl: blog.pdfKey
-      ? `${s3BaseUrl}/${encodeURIComponent(blog.pdfKey)}`
+    pdfUrl: blog.pdf_key
+      ? `${s3BaseUrl}/${encodeURIComponent(blog.pdf_key)}`
       : null,
   }));
 

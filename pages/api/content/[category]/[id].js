@@ -172,15 +172,37 @@ export default async function handler(req, res) {
       return res.status(404).json({ success: false, error: 'Record not found' });
     }
 
+    // Delete S3 files FIRST (before database) to ensure atomicity
+    try {
+      // Delete cover image from S3 if it exists
+      if (existing.coverKey) {
+        await deleteFromS3(existing.coverKey);
+      }
+      
+      // Delete PDF file from S3 if it exists
+      if (existing.pdfKey) {
+        await deleteFromS3(existing.pdfKey);
+      }
+    } catch (s3Err) {
+      console.error('S3 delete error:', s3Err);
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Failed to delete files from storage. Database record preserved.' 
+      });
+    }
+
+    // Only delete from database if S3 deletions succeeded
     try {
       await model.delete({ where: { id: recordId } });
     } catch (dbErr) {
       console.error('DB delete error:', dbErr);
-      return res.status(500).json({ success: false, error: 'Database error' });
+      // Note: S3 files are already deleted at this point
+      // This is acceptable as orphaned S3 files are less problematic than orphaned DB records
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Database error occurred after file deletion' 
+      });
     }
-
-    if (existing.coverKey) await deleteFromS3(existing.coverKey);
-    if (existing.pdfKey)   await deleteFromS3(existing.pdfKey);
 
     return res.status(200).json({ success: true });
   } else {

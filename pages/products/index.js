@@ -10,7 +10,7 @@ import ProductCard from '@/components/ProductCard'
 export async function getStaticProps() {
   // fetch raw product records, newest first
   const rawProducts = await prisma.product.findMany({
-    orderBy: { createdAt: 'desc' },
+    orderBy: { created_at: 'desc' },
   })
 
   // S3 configuration
@@ -23,11 +23,11 @@ export async function getStaticProps() {
     id:          product.id,
     slug:        product.slug,
     title:       product.title,
-    coverUrl:    product.coverKey
-      ? `${baseUrl}/${encodeURI(product.coverKey)}`
+    coverUrl:    product.cover_key
+      ? `${baseUrl}/${encodeURI(product.cover_key)}`
       : null,
-    pdfUrl:      product.pdfKey
-      ? `${baseUrl}/${encodeURI(product.pdfKey)}`
+    pdfUrl:      product.pdf_key
+      ? `${baseUrl}/${encodeURI(product.pdf_key)}`
       : null,
     description: product.description ?? '',
   }))

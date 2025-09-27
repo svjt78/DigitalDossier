@@ -19,7 +19,6 @@ export async function getStaticProps({ params }) {
     where: { slug: params.slug },
     include: { 
       genre: true,
-      webView: true,
     },
   });
 
@@ -33,12 +32,12 @@ export async function getStaticProps({ params }) {
   const baseUrl = `https://${bucket}.s3.${region}.amazonaws.com`;
 
   // Since coverKey/pdfKey already include their folders, just encodeURI to preserve the slash
-  const coverUrl = productRaw.coverKey
-    ? `${baseUrl}/${encodeURI(productRaw.coverKey)}`
+  const coverUrl = productRaw.cover_key
+    ? `${baseUrl}/${encodeURI(productRaw.cover_key)}`
     : null;
 
-  const pdfUrl = productRaw.pdfKey
-    ? `${baseUrl}/${encodeURI(productRaw.pdfKey)}`
+  const pdfUrl = productRaw.pdf_key
+    ? `${baseUrl}/${encodeURI(productRaw.pdf_key)}`
     : null;
 
   // Serialize Dates and attach URLs and genre
@@ -47,11 +46,10 @@ export async function getStaticProps({ params }) {
     genre: productRaw.genre?.name || null,
     coverUrl,
     pdfUrl,
-    webViewUrl: productRaw.webView?.objectUrl || null,
     // Include voting and comment data
-    netScore: productRaw.netScore || 0,
-    totalVotes: productRaw.totalVotes || 0,
-    commentCount: productRaw.commentCount || 0,
+    netScore: productRaw.net_score || 0,
+    totalVotes: productRaw.total_votes || 0,
+    commentCount: productRaw.comment_count || 0,
   };
 
   return {

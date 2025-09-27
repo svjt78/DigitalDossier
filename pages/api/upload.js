@@ -3,7 +3,6 @@ import path from 'path';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { prisma } from '@/lib/prisma';
 import slugify from 'slugify';
-
 // Disable Next.js body parser so we can parse multipart/form-data
 export const config = { api: { bodyParser: false } };
 

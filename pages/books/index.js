@@ -10,7 +10,7 @@ import BookCard from '@/components/BookCard';
 export async function getStaticProps() {
   // fetch all books, newest first
   const books = await prisma.book.findMany({
-    orderBy: { createdAt: 'desc' },
+    orderBy: { created_at: 'desc' },
   });
 
   // S3 configuration from environment
@@ -23,11 +23,11 @@ export async function getStaticProps() {
   // map each record to include full S3 URLs
   const booksWithUrls = books.map((book) => ({
     ...book,
-    coverUrl: book.coverKey
-      ? `${s3BaseUrl}/${encodeURIComponent(book.coverKey)}`
+    coverUrl: book.cover_key
+      ? `${s3BaseUrl}/${encodeURIComponent(book.cover_key)}`
       : null,
-    pdfUrl: book.pdfKey
-      ? `${s3BaseUrl}/${encodeURIComponent(book.pdfKey)}`
+    pdfUrl: book.pdf_key
+      ? `${s3BaseUrl}/${encodeURIComponent(book.pdf_key)}`
       : null,
   }));
 
