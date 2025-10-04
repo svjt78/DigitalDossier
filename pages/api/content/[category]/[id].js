@@ -96,13 +96,13 @@ export default async function handler(req, res) {
       }
     }
 
-    // handle genreId scalar directly
+    // handle genre_id scalar directly
     if (fields.genreId !== undefined) {
-      const genreId = parseInt(getValue(fields.genreId), 10);
-      if (Number.isNaN(genreId)) {
+      const genre_id = parseInt(getValue(fields.genreId), 10);
+      if (Number.isNaN(genre_id)) {
         return res.status(400).json({ success: false, error: 'Invalid genre ID' });
       }
-      updateData.genreId = genreId;
+      updateData.genre_id = genre_id;
     }
 
     // handle new cover image
@@ -111,8 +111,8 @@ export default async function handler(req, res) {
         ? files.coverImage[0]
         : files.coverImage;
       const { key: newKey } = await uploadToS3(file, IMAGES_PREFIX);
-      if (existing.coverKey) await deleteFromS3(existing.coverKey);
-      updateData.coverKey = newKey;
+      if (existing.cover_key) await deleteFromS3(existing.cover_key);
+      updateData.cover_key = newKey;
     }
 
     // handle new PDF file
@@ -121,16 +121,16 @@ export default async function handler(req, res) {
         ? files.pdfFile[0]
         : files.pdfFile;
       const { key: newKey } = await uploadToS3(file, PDF_PREFIX);
-      if (existing.pdfKey) await deleteFromS3(existing.pdfKey);
-      updateData.pdfKey = newKey;
+      if (existing.pdf_key) await deleteFromS3(existing.pdf_key);
+      updateData.pdf_key = newKey;
     }
 
     // preserve existing S3 keys when no new file was uploaded
     if (!files.coverImage) {
-      updateData.coverKey = existing.coverKey;
+      updateData.cover_key = existing.cover_key;
     }
     if (!files.pdfFile) {
-      updateData.pdfKey = existing.pdfKey;
+      updateData.pdf_key = existing.pdf_key;
     }
 
     try {
@@ -149,15 +149,15 @@ export default async function handler(req, res) {
         title:     updated.title,
         slug:      updated.slug,
         author:    updated.author,
-        genreId:   updated.genreId,
+        genreId:   updated.genre_id,
         summary:   updated.summary,
         content:   updated.content,
-        coverKey:  updated.coverKey,
-        pdfKey:    updated.pdfKey,
-        coverUrl:  updated.coverKey ? `${baseUrl}/${encodeURIComponent(updated.coverKey)}` : null,
-        pdfUrl:    updated.pdfKey   ? `${baseUrl}/${encodeURIComponent(updated.pdfKey)}`   : null,
-        createdAt: updated.createdAt,
-        updatedAt: updated.updatedAt,
+        coverKey:  updated.cover_key,
+        pdfKey:    updated.pdf_key,
+        coverUrl:  updated.cover_key ? `${baseUrl}/${encodeURIComponent(updated.cover_key)}` : null,
+        pdfUrl:    updated.pdf_key   ? `${baseUrl}/${encodeURIComponent(updated.pdf_key)}`   : null,
+        createdAt: updated.created_at,
+        updatedAt: updated.updated_at,
       };
 
       return res.status(200).json({ success: true, data: responseData });
@@ -175,13 +175,13 @@ export default async function handler(req, res) {
     // Delete S3 files FIRST (before database) to ensure atomicity
     try {
       // Delete cover image from S3 if it exists
-      if (existing.coverKey) {
-        await deleteFromS3(existing.coverKey);
+      if (existing.cover_key) {
+        await deleteFromS3(existing.cover_key);
       }
       
       // Delete PDF file from S3 if it exists
-      if (existing.pdfKey) {
-        await deleteFromS3(existing.pdfKey);
+      if (existing.pdf_key) {
+        await deleteFromS3(existing.pdf_key);
       }
     } catch (s3Err) {
       console.error('S3 delete error:', s3Err);

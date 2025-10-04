@@ -73,8 +73,22 @@ async function handleGetComments(req, res, contentType, contentId) {
     }
   });
 
-  // Convert flat comments to threaded structure
-  const threadedComments = buildCommentTree(comments);
+  // Transform comments to camelCase and convert to threaded structure
+  const transformedComments = comments.map(comment => ({
+    id: comment.id,
+    content: comment.content,
+    author_id: comment.author_id,
+    content_type: comment.content_type,
+    content_id: comment.content_id,
+    parent_id: comment.parent_id,
+    is_edited: comment.is_edited,
+    is_deleted: comment.is_deleted,
+    created_at: comment.created_at,
+    updated_at: comment.updated_at,
+    user: comment.user
+  }));
+  
+  const threadedComments = buildCommentTree(transformedComments);
   
   // Get total count
   const totalCount = await prisma.comment.count({
@@ -161,7 +175,20 @@ async function handleCreateComment(req, res, contentType, contentId) {
     // Update comment count in content table
     await updateContentCommentCount(tx, contentType, contentId);
 
-    return comment;
+    // Transform the response to match frontend expectations
+    return {
+      id: comment.id,
+      content: comment.content,
+      author_id: comment.author_id,
+      content_type: comment.content_type,
+      content_id: comment.content_id,
+      parent_id: comment.parent_id,
+      is_edited: comment.is_edited,
+      is_deleted: comment.is_deleted,
+      created_at: comment.created_at,
+      updated_at: comment.updated_at,
+      user: comment.user
+    };
   });
 
   return res.status(201).json(result);

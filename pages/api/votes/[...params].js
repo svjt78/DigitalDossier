@@ -224,8 +224,8 @@ async function calculateVoteAggregates(tx, contentType, contentId) {
   return {
     upvotes,
     downvotes,
-    netScore: upvotes - downvotes,
-    totalVotes: upvotes + downvotes
+    net_score: upvotes - downvotes,
+    total_votes: upvotes + downvotes
   };
 }
 
@@ -245,8 +245,8 @@ async function calculateAndUpdateAggregates(tx, contentType, contentId) {
   await tx[model].update({
     where: { id: contentId },
     data: {
-      net_score: aggregates.netScore,
-      total_votes: aggregates.totalVotes
+      net_score: aggregates.net_score,
+      total_votes: aggregates.total_votes
     }
   });
 

@@ -48,6 +48,8 @@ export async function getStaticProps({ params }) {
         .join('/')}`
     : null;
 
+  const webViewUrl = blogRaw.html_key ? blogRaw.html_key : null;
+
   return {
     props: {
       blog: {
@@ -60,6 +62,7 @@ export async function getStaticProps({ params }) {
         content: blogRaw.content,
         coverUrl,
         pdfUrl,
+        webViewUrl,
         // Include voting and comment data
         netScore: blogRaw.net_score || 0,
         totalVotes: blogRaw.total_votes || 0,

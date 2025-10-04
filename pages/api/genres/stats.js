@@ -14,9 +14,9 @@ export default async function handler(req, res) {
       include: {
         _count: {
           select: {
-            blogs: true,
-            books: true,
-            products: true
+            blog: true,
+            book: true,
+            product: true
           }
         }
       }
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
       ...genre,
       _count: {
         ...genre._count,
-        total: genre._count.blogs + genre._count.books + genre._count.products
+        total: genre._count.blog + genre._count.book + genre._count.product
       }
     }));
 

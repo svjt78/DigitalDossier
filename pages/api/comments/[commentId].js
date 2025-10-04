@@ -45,7 +45,7 @@ async function handleGetComment(req, res, commentId) {
   const comment = await prisma.comment.findUnique({
     where: { id: commentId },
     include: {
-      author: {
+      user: {
         select: {
           id: true,
           name: true,
@@ -55,7 +55,7 @@ async function handleGetComment(req, res, commentId) {
     }
   });
 
-  if (!comment || comment.isDeleted) {
+  if (!comment || comment.is_deleted) {
     return res.status(404).json({ error: 'Comment not found' });
   }
 
@@ -77,14 +77,14 @@ async function handleUpdateComment(req, res, commentId, user) {
   // Check if comment exists and user is the author
   const existingComment = await prisma.comment.findUnique({
     where: { id: commentId },
-    select: { id: true, authorId: true, isDeleted: true }
+    select: { id: true, author_id: true, is_deleted: true }
   });
 
-  if (!existingComment || existingComment.isDeleted) {
+  if (!existingComment || existingComment.is_deleted) {
     return res.status(404).json({ error: 'Comment not found' });
   }
 
-  if (existingComment.authorId !== parseInt(user.id)) {
+  if (existingComment.author_id !== parseInt(user.id)) {
     return res.status(403).json({ error: 'You can only edit your own comments' });
   }
 
@@ -93,11 +93,11 @@ async function handleUpdateComment(req, res, commentId, user) {
     where: { id: commentId },
     data: {
       content: content.trim(),
-      isEdited: true,
-      updatedAt: new Date()
+      is_edited: true,
+      updated_at: new Date()
     },
     include: {
-      author: {
+      user: {
         select: {
           id: true,
           name: true,
@@ -117,27 +117,27 @@ async function handleDeleteComment(req, res, commentId, user) {
     where: { id: commentId },
     select: { 
       id: true, 
-      authorId: true, 
-      isDeleted: true,
-      contentType: true,
-      contentId: true,
-      parentId: true
+      author_id: true, 
+      is_deleted: true,
+      content_type: true,
+      content_id: true,
+      parent_id: true
     }
   });
 
-  if (!existingComment || existingComment.isDeleted) {
+  if (!existingComment || existingComment.is_deleted) {
     return res.status(404).json({ error: 'Comment not found' });
   }
 
-  if (existingComment.authorId !== parseInt(user.id)) {
+  if (existingComment.author_id !== parseInt(user.id)) {
     return res.status(403).json({ error: 'You can only delete your own comments' });
   }
 
   // Check if comment has replies
   const hasReplies = await prisma.comment.count({
     where: {
-      parentId: commentId,
-      isDeleted: false
+      parent_id: commentId,
+      is_deleted: false
     }
   });
 
@@ -149,8 +149,8 @@ async function handleDeleteComment(req, res, commentId, user) {
         where: { id: commentId },
         data: {
           content: '[Comment deleted]',
-          isDeleted: true,
-          updatedAt: new Date()
+          is_deleted: true,
+          updated_at: new Date()
         }
       });
     } else {
@@ -163,8 +163,8 @@ async function handleDeleteComment(req, res, commentId, user) {
     // Update comment count in content table
     await updateContentCommentCount(
       tx, 
-      existingComment.contentType, 
-      existingComment.contentId
+      existingComment.content_type, 
+      existingComment.content_id
     );
   });
 
@@ -178,9 +178,9 @@ async function handleDeleteComment(req, res, commentId, user) {
 async function updateContentCommentCount(tx, contentType, contentId) {
   const count = await tx.comment.count({
     where: {
-      contentType,
-      contentId,
-      isDeleted: false
+      content_type: contentType,
+      content_id: contentId,
+      is_deleted: false
     }
   });
 
@@ -195,7 +195,7 @@ async function updateContentCommentCount(tx, contentType, contentId) {
   await tx[model].update({
     where: { id: contentId },
     data: {
-      commentCount: count
+      comment_count: count
     }
   });
 }

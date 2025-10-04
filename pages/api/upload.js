@@ -72,7 +72,7 @@ export default async function handler(req, res) {
   const title    = getField('title').trim();
   const author   = getField('author').trim();
   const category = getField('category').trim();
-  const genreId  = parseInt(getField('genreId'), 10);
+  const genre_id  = parseInt(getField('genreId'), 10);
   const content  = getField('content') || '';
 
   // Validate required fields
@@ -82,7 +82,7 @@ export default async function handler(req, res) {
   if (!category || !title || !coverFile || !pdfFile) {
     return res.status(400).json({ error: 'Category, Title, Cover Image and PDF file are all required.' });
   }
-  if (Number.isNaN(genreId)) {
+  if (Number.isNaN(genre_id)) {
     return res.status(400).json({ error: 'Invalid genre ID' });
   }
 
@@ -97,10 +97,10 @@ export default async function handler(req, res) {
   }
 
   // Upload files to S3
-  let coverKey, coverUrl, pdfKey, pdfUrl;
+  let cover_key, coverUrl, pdf_key, pdfUrl;
   try {
-    ({ key: coverKey, url: coverUrl } = await uploadToS3(coverFile, IMAGES_PREFIX));
-    ({ key: pdfKey,   url: pdfUrl   } = await uploadToS3(pdfFile,   PDF_PREFIX));
+    ({ key: cover_key, url: coverUrl } = await uploadToS3(coverFile, IMAGES_PREFIX));
+    ({ key: pdf_key,   url: pdfUrl   } = await uploadToS3(pdfFile,   PDF_PREFIX));
   } catch (err) {
     console.error('Upload to S3 error:', err);
     return res.status(500).json({ error: 'Error saving uploaded files' });
@@ -123,9 +123,10 @@ export default async function handler(req, res) {
     author,
     summary,
     content: '',
-    coverKey,
-    pdfKey,
-    genre: { connect: { id: genreId } },
+    cover_key,
+    pdf_key,
+    updated_at: new Date(),
+    genre: { connect: { id: genre_id } },
   };
 
   try {
@@ -139,12 +140,12 @@ export default async function handler(req, res) {
         author:    newEntry.author,
         genre:     newEntry.genre,
         summary:   newEntry.summary,
-        coverKey:  newEntry.coverKey,
-        pdfKey:    newEntry.pdfKey,
+        coverKey:  newEntry.cover_key,
+        pdfKey:    newEntry.pdf_key,
         coverUrl,
         pdfUrl,
-        createdAt: newEntry.createdAt,
-        updatedAt: newEntry.updatedAt,
+        createdAt: newEntry.created_at,
+        updatedAt: newEntry.updated_at,
       }
     });
   } catch (err) {

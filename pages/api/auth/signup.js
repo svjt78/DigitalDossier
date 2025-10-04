@@ -59,7 +59,7 @@ export default async function handler(req, res) {
         try {
           await prisma.user.upsert({
             where: { email },
-            create: { email, name: username },
+            create: { email, name: username, updated_at: new Date() },
             update: { name: username },
           });
         } catch (dbErr) {
@@ -149,6 +149,7 @@ export default async function handler(req, res) {
         create: {
           email: credEmail,
           name: credUsername,
+          updated_at: new Date(),
           // credentialUserId,
         },
         update: {

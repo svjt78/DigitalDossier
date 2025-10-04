@@ -40,12 +40,15 @@ export async function getStaticProps({ params }) {
     ? `${baseUrl}/${encodeURI(productRaw.pdf_key)}`
     : null;
 
+  const webViewUrl = productRaw.html_key ? productRaw.html_key : null;
+
   // Serialize Dates and attach URLs and genre
   const product = {
     ...JSON.parse(JSON.stringify(productRaw)),
     genre: productRaw.genre?.name || null,
     coverUrl,
     pdfUrl,
+    webViewUrl,
     // Include voting and comment data
     netScore: productRaw.net_score || 0,
     totalVotes: productRaw.total_votes || 0,

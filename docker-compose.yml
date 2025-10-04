@@ -57,7 +57,7 @@ services:
         # 1. wait for Postgres to be ready
         until pg_isready -h db -U $${POSTGRES_USER}; do sleep 1; done &&
         # 2. apply migrations and generate Prisma client
-        npx prisma migrate dev --name init &&
+        npx prisma migrate deploy &&
         npx prisma generate &&
         # 3. start Next.js in dev mode
         npm run dev

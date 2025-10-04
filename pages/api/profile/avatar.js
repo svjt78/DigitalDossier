@@ -122,12 +122,12 @@ export default async function handler(req, res) {
   try {
     profile = await prisma.profile.upsert({
       where: { id: 1 },
-      update: { avatarKey: avatarUrl },
-      create: { avatarKey: avatarUrl },
+      update: { avatar_key: avatarUrl },
+      create: { avatar_key: avatarUrl },
     });
     console.log(`✅ Profile updated in database with avatar: ${avatarUrl}`);
   } catch (dbErr) {
-    console.error("Error saving avatarKey to DB:", dbErr);
+    console.error("Error saving avatar_key to DB:", dbErr);
     return res.status(500).json({ error: "Error saving profile data" });
   }
 
@@ -147,10 +147,10 @@ export default async function handler(req, res) {
     message: "Avatar updated successfully",
     data: {
       id:         profile.id,
-      avatarKey:  profile.avatarKey,
+      avatarKey:  profile.avatar_key,
       avatarUrl:  avatarUrl,
-      createdAt:  profile.createdAt,
-      updatedAt:  profile.updatedAt,
+      createdAt:  profile.created_at,
+      updatedAt:  profile.updated_at,
       uploadedBy: validation.user.email
     }
   });

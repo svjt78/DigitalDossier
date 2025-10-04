@@ -22,7 +22,7 @@ export default function CommentThread({
   const [showActions, setShowActions] = useState(false);
   const [deleting, setDeleting] = useState(false);
   
-  const isAuthor = isAuthenticated && userId && parseInt(userId) === comment.authorId;
+  const isAuthor = isAuthenticated && userId && parseInt(userId) === comment.author_id;
   const canReply = isAuthenticated && (!maxDepth || depth < maxDepth);
   
   const handleReply = (newComment) => {
@@ -88,15 +88,15 @@ export default function CommentThread({
           <div className="flex items-center space-x-3">
             {/* Author avatar placeholder */}
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-              {(comment.author?.name || 'U')[0].toUpperCase()}
+              {(comment.user?.name || 'U')[0].toUpperCase()}
             </div>
             
             <div>
               <span className="text-white font-medium">
-                {comment.author?.name || 'Unknown User'}
+                {comment.user?.name || 'Unknown User'}
               </span>
               <span className="text-gray-400 text-sm ml-2">
-                {formatDate(comment.createdAt)}
+                {formatDate(comment.created_at)}
                 {comment.isEdited && (
                   <span className="ml-1 text-xs">(edited)</span>
                 )}
@@ -189,7 +189,7 @@ export default function CommentThread({
               parentId={comment.id}
               onSubmit={handleReply}
               onCancel={() => setShowReplyForm(false)}
-              placeholder={`Reply to ${comment.author?.name || 'this comment'}...`}
+              placeholder={`Reply to ${comment.user?.name || 'this comment'}...`}
               isReply={true}
             />
           </div>

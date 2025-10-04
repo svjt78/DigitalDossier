@@ -44,6 +44,8 @@ export async function getStaticProps({ params }) {
     pdfUrl = `${baseUrl}/${pdfsPrefix}/${encodeURIComponent(filename)}`
   }
 
+  const webViewUrl = bookRaw.html_key ? bookRaw.html_key : null;
+
   // Serialize and include genre name
   const { created_at, updated_at, cover_key, pdf_key, net_score, total_votes, comment_count, ...bookWithoutDates } = bookRaw;
   const serializedBook = {
@@ -53,6 +55,7 @@ export async function getStaticProps({ params }) {
     updatedAt: bookRaw.updated_at.toISOString(),
     coverUrl,
     pdfUrl,
+    webViewUrl,
     // Include voting and comment data
     netScore: bookRaw.net_score || 0,
     totalVotes: bookRaw.total_votes || 0,

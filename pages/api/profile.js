@@ -22,12 +22,12 @@ export default async function handler(req, res) {
     // Custom avatar doesn't exist, check database for any stored path
     try {
       const profile = await prisma.profile.findFirst();
-      if (profile?.avatarKey) {
+      if (profile?.avatar_key) {
         // Verify the file still exists
-        const storedPath = path.join(process.cwd(), "public", profile.avatarKey);
+        const storedPath = path.join(process.cwd(), "public", profile.avatar_key);
         try {
           await fs.promises.access(storedPath);
-          avatarUrl = profile.avatarKey;
+          avatarUrl = profile.avatar_key;
         } catch {
           // File doesn't exist, fall back to logo
           console.log('Stored avatar file not found, using logo.svg');
