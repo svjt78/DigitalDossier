@@ -211,6 +211,23 @@ SELECT fix_all_vote_inconsistencies();
 
 ## Deployment
 
+### Vercel Deployment (Recommended)
+
+The application is optimized for Vercel deployment with the included `vercel.json` configuration:
+
+```bash
+# Deploy to Vercel
+npm run build:vercel
+```
+
+**Environment Variables for Vercel:**
+- Copy all variables from `.env.production` to your Vercel project dashboard
+- Ensure `DATABASE_URL` points to your production PostgreSQL instance (Neon.tech recommended)
+- Configure AWS S3 credentials for file storage
+- Set `AUTH_API_BASE` to your authentication service endpoint
+
+**Live Demo:** [https://digital-dossier-68rvndqsk-suvojit-duttas-projects.vercel.app](https://digital-dossier-68rvndqsk-suvojit-duttas-projects.vercel.app)
+
 ### Production Build
 
 ```bash
