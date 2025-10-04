@@ -191,6 +191,11 @@ async function handleCreateComment(req, res, contentType, contentId) {
     };
   });
 
+  // Trigger revalidation for home page (non-blocking)
+  triggerRevalidation(contentType, contentId).catch(err => {
+    console.warn('Revalidation failed (non-critical):', err);
+  });
+
   return res.status(201).json(result);
 }
 
@@ -265,4 +270,36 @@ async function updateContentCommentCount(tx, contentType, contentId) {
       comment_count: count
     }
   });
+}
+
+// Trigger on-demand revalidation (non-blocking)
+async function triggerRevalidation(contentType, contentId) {
+  try {
+    // Fix production URL handling - add protocol to VERCEL_URL
+    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    if (!baseUrl) {
+      baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3003';
+    }
+    const revalidationToken = process.env.REVALIDATION_TOKEN || 'dev-token-secure-123';
+
+    const response = await fetch(`${baseUrl}/api/revalidate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${revalidationToken}`
+      },
+      body: JSON.stringify({
+        paths: ['/', '/blog', '/books', '/products']
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Revalidation failed: ${response.status}`);
+    }
+
+    console.log(`✅ Revalidation triggered for ${contentType}/${contentId}`);
+  } catch (error) {
+    console.warn('Revalidation failed (non-critical):', error.message);
+    // Don't fail the comment operation if revalidation fails
+  }
 }

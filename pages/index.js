@@ -82,13 +82,17 @@ export async function getStaticProps() {
       ...productsWithType,
     ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-    // Build full S3 URLs for cover images
+    // Build full S3 URLs for cover images and fix field name mapping
     const bucket  = process.env.AWS_S3_BUCKET;
     const region  = process.env.AWS_REGION;
     const baseUrl = `https://${bucket}.s3.${region}.amazonaws.com`;
 
     const itemsWithUrls = merged.map(item => ({
       ...item,
+      // Fix field name mapping: snake_case DB fields → camelCase for UI
+      netScore: item.net_score,
+      totalVotes: item.total_votes,
+      commentCount: item.comment_count,
       coverUrl: item.cover_key
         ? `${baseUrl}/${encodeURI(item.cover_key)}`
         : null,

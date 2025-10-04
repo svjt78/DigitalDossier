@@ -9,7 +9,7 @@ export default async function handler(req, res) {
 
   // Check for secret to confirm this is a valid request
   const authHeader = req.headers.authorization;
-  const expectedToken = process.env.REVALIDATION_TOKEN || 'dev-token';
+  const expectedToken = process.env.REVALIDATION_TOKEN || 'dev-token-secure-123';
   
   if (!authHeader || !authHeader.startsWith('Bearer ') || authHeader.slice(7) !== expectedToken) {
     return res.status(401).json({ error: 'Invalid token' });

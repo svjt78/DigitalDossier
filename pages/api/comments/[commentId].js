@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Authentication required' });
   }
 
-  const user = getUserFromToken(req);
+  const user = await getUserFromToken(req);
   if (!user) {
     return res.status(401).json({ error: 'Invalid authentication token' });
   }
@@ -77,7 +77,7 @@ async function handleUpdateComment(req, res, commentId, user) {
   // Check if comment exists and user is the author
   const existingComment = await prisma.comment.findUnique({
     where: { id: commentId },
-    select: { id: true, author_id: true, is_deleted: true }
+    select: { id: true, author_id: true, is_deleted: true, content_type: true, content_id: true }
   });
 
   if (!existingComment || existingComment.is_deleted) {
@@ -105,6 +105,11 @@ async function handleUpdateComment(req, res, commentId, user) {
         }
       }
     }
+  });
+
+  // Trigger revalidation for home page (non-blocking) 
+  triggerRevalidation(existingComment.content_type, existingComment.content_id).catch(err => {
+    console.warn('Revalidation failed (non-critical):', err);
   });
 
   return res.status(200).json(updatedComment);
@@ -168,6 +173,11 @@ async function handleDeleteComment(req, res, commentId, user) {
     );
   });
 
+  // Trigger revalidation for home page (non-blocking)
+  triggerRevalidation(existingComment.content_type, existingComment.content_id).catch(err => {
+    console.warn('Revalidation failed (non-critical):', err);
+  });
+
   return res.status(200).json({ 
     message: 'Comment deleted successfully',
     deletedCommentId: commentId
@@ -198,4 +208,36 @@ async function updateContentCommentCount(tx, contentType, contentId) {
       comment_count: count
     }
   });
+}
+
+// Trigger on-demand revalidation (non-blocking)
+async function triggerRevalidation(contentType, contentId) {
+  try {
+    // Fix production URL handling - add protocol to VERCEL_URL
+    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    if (!baseUrl) {
+      baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3003';
+    }
+    const revalidationToken = process.env.REVALIDATION_TOKEN || 'dev-token-secure-123';
+
+    const response = await fetch(`${baseUrl}/api/revalidate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${revalidationToken}`
+      },
+      body: JSON.stringify({
+        paths: ['/', '/blog', '/books', '/products']
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Revalidation failed: ${response.status}`);
+    }
+
+    console.log(`✅ Revalidation triggered for ${contentType}/${contentId}`);
+  } catch (error) {
+    console.warn('Revalidation failed (non-critical):', error.message);
+    // Don't fail the comment operation if revalidation fails
+  }
 }

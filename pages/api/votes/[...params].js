@@ -256,8 +256,12 @@ async function calculateAndUpdateAggregates(tx, contentType, contentId) {
 // NEW: Trigger on-demand revalidation (non-blocking)
 async function triggerRevalidation(contentType, contentId) {
   try {
-    const baseUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'http://localhost:3000';
-    const revalidationToken = process.env.REVALIDATION_TOKEN || 'dev-token';
+    // Fix production URL handling - add protocol to VERCEL_URL
+    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    if (!baseUrl) {
+      baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3003';
+    }
+    const revalidationToken = process.env.REVALIDATION_TOKEN || 'dev-token-secure-123';
 
     const response = await fetch(`${baseUrl}/api/revalidate`, {
       method: 'POST',
@@ -266,7 +270,7 @@ async function triggerRevalidation(contentType, contentId) {
         'Authorization': `Bearer ${revalidationToken}`
       },
       body: JSON.stringify({
-        paths: ['/', `/blog/index`, `/books/index`, `/products/index`]
+        paths: ['/', '/blog', '/books', '/products']
       })
     });
 
